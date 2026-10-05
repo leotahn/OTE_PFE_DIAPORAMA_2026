@@ -1,0 +1,2795 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquettes numériques 3D photoréalistes à partir du LiDAR-HD — Léo Kirchhoff</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/01-theme.css">
+<link rel="stylesheet" href="css/02-layout.css">
+<link rel="stylesheet" href="css/03-components.css">
+</head>
+
+<body>
+<!-- =======================================================================
+     SIG 2026, le Géo événement — OTE Ingénierie
+     Présentation de 20 à 25 minutes · 30 cadres + annexes cachées
+
+     SOMMAIRE DES CADRES (numéro · titre · partie · ancre)
+       01  Page de titre                            Ouverture              #c01
+       02  Intervenants                             Le Groupe OTE          #cint
+       03  Groupe OTE                               Le Groupe OTE          #cote
+       04  Implantations                            Le Groupe OTE          #cimp
+       05  Pôle Géomatique                          Le Groupe OTE          #cpole
+       06  Données 3D                               Le Groupe OTE          #c3d
+       07  Enjeux et objectifs                      Enjeux et objectifs    #cenj
+       08  LiDAR HD                                 Enjeux et objectifs    #clidar
+       09  Problématique                            Enjeux et objectifs    #c03
+       10  Chaîne de traitement                     Chaîne de traitement   #c08
+       11  Partie 1                                 1 · Segmentation       #c09
+       12  Jeu d'apprentissage                      1 · Segmentation       #c11
+       13  Rastérisation 2,5D                       1 · Segmentation       #c12
+       14  Hybridation des emprises                 1 · Segmentation       #c15
+       15  Partie 2                                 2 · Reconstruction     #c16
+       16  Fonctionnement de Roofer                 2 · Reconstruction     #c17
+       17  Résultats de la reconstruction           2 · Reconstruction     #c18
+       18  Partie 3                                 3 · Texturage          #c19
+       19  Toitures : projection orthophotographique 3 · Texturage          #c20
+       20  Façades : chaîne photogrammétrique       3 · Texturage          #c21
+       21  Étape 1 · Panoramax                      3 · Texturage          #c22
+       22  Étape 2 · Dépliage                       3 · Texturage          #c23
+       23  Étape 3 · Photogrammétrie                3 · Texturage          #c24
+       24  Étape 4 · Recalage                       3 · Texturage          #c25
+       25  Étape 5 · Ortho-façades                  3 · Texturage          #c26
+       26  Résultats du texturage                   3 · Texturage          #c27
+       27  Partie 4                                 4 · Rendu              #c28
+       28  Export et intégration                    4 · Rendu              #c29
+       29  Conclusion et perspectives               Bilan                  #c30
+       30  Merci                                    Bilan                  #c31
+       A1  Annexe · Limites du référentiel vectoriel annexe (cachée)        #c10
+       A2  Annexe · Choix du modèle                 annexe (cachée)        #c13
+       A3  Annexe · Performances de la segmentation annexe (cachée)        #c14
+       A4  Annexe · Démonstration ArcGIS Pro        annexe (cachée)        #c32
+       A5  Annexe · Essais YOLO                     annexe (cachée)        #c33
+       A6  Annexe · Fonction de coût                annexe (cachée)        #c34
+       A7  Annexe · Dépliage gnomonique             annexe (cachée)        #c35
+       A8  Annexe · Recalage du nuage de rue        annexe (cachée)        #c36
+       A9  Annexe · Références citées               annexe (cachée)        #c37
+
+     Les identifiants (#c03, #c17…) sont ceux d'origine : seuls l'ordre et les
+     numéros d'affichage ont changé. Pour retrouver un cadre : rechercher « CADRE 15 ».
+
+     ATTRIBUTS D'UN CADRE
+       data-sec    partie de rattachement (0 intro, 1..4 chaîne, 5 bilan).
+                   Pilote la barre latérale et le pied de page.
+       data-title  libellé affiché dans le plan (touche S).
+       data-kind   chapter → transition zoom · cover → animation ·
+                   map → chargement différé de l'iframe.
+       data-hidden="1" cadre caché : hors déroulé, accessible par le plan (S).
+       data-hub    à poser sur UN seul cadre : celui à partir duquel la
+                   barre latérale apparaît.
+       data-anim="1" cadre qui garde une révélation au clic (avant / après).
+       class bleed → cadre pleine surface, sans marge ni pied.
+
+     RÉVÉLATION PROGRESSIVE
+       Ajouter la classe « frag » à un élément : il apparaît au clic suivant.
+       Touche N pour tout révéler d'un coup.
+     ======================================================================= -->
+
+<div id="viewport">
+<div id="stage">
+
+  <!-- ---------- barre latérale : parties de la chaîne de traitement ------
+       data-jump renvoie vers la valeur data-sec correspondante. -->
+  <nav id="side" aria-label="Plan">
+    <div class="sh">Chaîne de traitement</div>
+    <ol>
+      <li class="sit" data-jump="1"><span class="sn">1</span><span>Segmentation du bâti</span></li>
+      <li class="sit" data-jump="2"><span class="sn">2</span><span>Reconstruction 3D</span></li>
+      <li class="sit" data-jump="3"><span class="sn">3</span><span>Texturage hybride</span></li>
+      <li class="sit" data-jump="4"><span class="sn">4</span><span>Rendu temps réel</span></li>
+    </ol>
+  </nav>
+
+  <!-- ---------- pied de page (auteur | partie courante | numéro) -------- -->
+  <div id="foot">
+    <span class="f1">OTE Ingénierie</span>
+    <span class="f2" id="footsec">Chaîne de traitement</span>
+    <span class="f3"><b>SIG 2026</b><span id="fcur">1</span>/<span id="ftot">1</span></span>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 01 · Page de titre
+       partie : introduction   |   type : cover   |   ancre : #c01
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c01" class="slide bleed" data-sec="0" data-title="Page de titre" data-kind="cover">
+    <div class="tp">
+      <div class="logos">
+        <div class="lgroup">
+        <span class="logo lg" data-name="OTE Ingénierie" data-sub="Groupe OTE">
+          <img src="assets/LOGO_OTE_ING.png" alt="OTE Ingénierie">
+        </span>
+        </div>
+        <div class="lgroup">
+          <span class="logo" style="height:42px" data-name="INSA Strasbourg" data-sub="Institut national des sciences appliquées">
+            <img style="max-height:42px" src="assets/LOGO_INSA.jpg" alt="INSA Strasbourg"></span>
+          <span class="logo" style="height:42px" data-name="Télécom Physique Strasbourg" data-sub="Université de Strasbourg">
+            <img style="max-height:42px" src="assets/LOGO_TPS.png" alt="Télécom Physique Strasbourg"></span>
+        </div>
+      </div>
+  
+      <div class="tmain">
+        <div class="tcol">
+          <div class="ttype">SIG 2026 · Conférence francophone Esri</div>
+          <h1>Développement de méthodes de création et d'édition de maquettes numériques 3D photoréalistes géoréférencées à partir de nuages de points LiDAR</h1>
+          <p class="tsub">Chaîne automatisée fondée sur des données ouvertes, du nuage de points brut à l'environnement de rendu temps réel.</p>
+          <div class="tsep"></div>
+          <div class="tpeople">
+            <div><b>Stéphane Moisy</b>Expert Cartographie et Administration S.I.G. · Chef de pôle</div>
+            <div><b>Baptiste Mischler</b>Ingénieur Géomètre Topographe et Géomaticien</div>
+          </div>
+</div>
+  
+        <!-- animation : nuage LiDAR -> plans de toiture -> LoD2, en boucle.
+             Réglages dans js/cover.js (durées, densité, couleurs, rotation). -->
+        <div class="tviz"><canvas id="recon"></canvas></div>
+      </div>
+  
+      <div class="tfoot">
+        <span>SIG 2026, le Géo événement — Esri France</span>
+        <span>Docks de Paris, 7 et 8 octobre 2026</span>
+      </div>
+    </div>
+  </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 02 · Intervenants
+       partie : introduction   |   type : contenu   |   ancre : #cint
+       photos attendues : assets/PHOTO_MOISY.jpg et assets/PHOTO_MISCHLER.jpg
+       (carrées de préférence ; à défaut, les initiales s'affichent)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="cint" class="slide" data-sec="0" data-title="Intervenants" data-foot="Le Groupe OTE">
+    <style>
+      #cint .duo{flex:1;display:flex;align-items:center;justify-content:center;gap:150px}
+      #cint .pers{width:420px;display:flex;flex-direction:column;align-items:center;text-align:center}
+      #cint .ph{position:relative;width:260px;height:260px;border-radius:50%;overflow:hidden;
+        background:var(--insa-d);border:4px solid #fff;box-shadow:0 0 0 2px var(--insa);
+        display:flex;align-items:center;justify-content:center;margin-bottom:30px}
+      #cint .ph span{font-family:var(--f-serif);font-size:76px;font-weight:600;color:var(--ciel)}
+      #cint .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+      #cint .pers h2{font-size:30px;color:var(--insa-d)}
+      #cint .pers p{margin-top:12px;font-size:18px;line-height:1.45;color:var(--muted);max-width:none}
+      #cint .pers p b{display:block;color:var(--insa);font-weight:600;margin-top:4px}
+    </style>
+    <div class="ft"><div><h1>Intervenants</h1><div class="fsub">OTE Ingénierie · Groupe OTE</div></div></div>
+    <div class="fr-body">
+      <div class="duo">
+        <div class="pers">
+          <div class="ph"><span>SM</span><img src="assets/SM.jpg" alt="Stéphane Moisy" onerror="this.remove()"></div>
+          <h2>Stéphane Moisy</h2>
+          <p>Expert Cartographie et Administration S.I.G<b>Chef de pôle</b></p>
+        </div>
+        <div class="pers">
+          <div class="ph"><span>BM</span><img src="assets/BM.jpg" alt="Baptiste Mischler" onerror="this.remove()"></div>
+          <h2>Baptiste Mischler</h2>
+          <p>Géomètre Topographe et Géomaticien<b>Ingénieur</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 03 · Groupe OTE
+       partie : introduction   |   type : contenu   |   ancre : #cote
+       images attendues : assets/OTE_1.jpg · assets/OTE_2.jpg
+                          assets/LOGO_GROUPE_OTE.png
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="cote" class="slide" data-sec="0" data-title="Groupe OTE" data-foot="Le Groupe OTE">
+    <style>
+      /* bandeau photo */
+      #cote .vues{position:relative;flex:none;height:400px;background:var(--insa-d);overflow:hidden}
+      #cote .vue{position:absolute;top:0;bottom:0;background-size:cover;background-position:center}
+      #cote .vue.g{left:0;width:56%;clip-path:polygon(0 0,92.86% 0,100% 100%,0 100%);
+        background-image:url("assets/OTE_1.jpg")}
+      #cote .vue.d{left:52.3%;width:47.7%;clip-path:polygon(0 0,100% 0,100% 100%,8.33% 100%);
+        background-image:url("assets/OTE_2.jpg");background-color:var(--insa)}
+      #cote .vue::after{content:'';position:absolute;left:0;right:0;bottom:0;height:110px;
+        background:linear-gradient(to top,rgba(30,29,55,.85),rgba(30,29,55,0))}
+      #cote .vue span{position:absolute;z-index:1;bottom:16px;left:46px;
+        font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
+        padding-left:12px;border-left:2px solid var(--ciel)}
+      #cote .vue.d span{left:auto;right:46px}
+
+      /* présentation */
+      #cote .pres{flex:1;min-height:0;display:grid;grid-template-columns:230px 1fr;gap:54px;
+        align-items:center;padding:0 60px 0 46px}
+      #cote .pres .lg{display:flex;align-items:center;justify-content:center;height:150px;
+        border-right:1px solid var(--rule);padding-right:54px}
+      #cote .pres .lg img{width:100%;height:auto;display:block}
+      #cote .sur{font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+        color:var(--insa);margin-bottom:10px}
+      #cote .pres p{font-family:var(--f-serif);font-size:25px;line-height:1.3;color:var(--insa-d);
+        max-width:none;margin-bottom:22px}
+      #cote ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+      #cote ul li{font-size:17.5px;color:var(--ink);padding:11px 0 11px 22px;position:relative;
+        border-top:1px solid var(--rule)}
+      #cote ul li::before{content:'';position:absolute;left:0;top:19px;width:9px;height:9px;background:var(--insa)}
+
+      /* chiffres clés */
+      #cote .chiffres{flex:none;height:150px;background:var(--insa-d);
+        display:grid;grid-template-columns:repeat(5,1fr);align-items:center;padding:0 22px}
+      #cote .chiffres div{padding:0 24px;border-left:1px solid rgba(255,255,255,.18)}
+      #cote .chiffres div:first-child{border-left:0}
+      #cote .chiffres b{display:block;font-family:var(--f-serif);font-size:44px;font-weight:600;
+        line-height:1;color:#fff}
+      #cote .chiffres b small{font-size:22px;font-weight:600;margin-left:4px}
+      #cote .chiffres span{display:block;margin-top:10px;font-size:12.5px;font-weight:600;
+        letter-spacing:.12em;text-transform:uppercase;color:var(--ciel)}
+    </style>
+
+    <div class="vues">
+      <div class="vue g"><span>Parc des expositions · Strasbourg</span></div>
+      <div class="vue d"><span>Stade de la Meinau · Strasbourg</span></div>
+    </div>
+
+    <div class="pres">
+      <div class="lg"><img src="assets/LOGO_GROUPE_OTE.png" alt="Groupe OTE"></div>
+      <div>
+        <div class="sur">Le Groupe OTE</div>
+        <p>Une société d'ingénierie pluridisciplinaire pour la conception de bâtiments à forte valeur ajoutée</p>
+        <ul>
+          <li>Bâtiments fonctionnels</li>
+          <li>Bâtiments industriels et commerciaux</li>
+          <li>Infrastructures et aménagements urbains</li>
+          <li>Bâtiments d'habitation collective</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="chiffres">
+      <div><b>11</b><span>Implantations</span></div>
+      <div><b>5</b><span>Sociétés</span></div>
+      <div><b>2</b><span>Marques</span></div>
+      <div><b>330</b><span>Collaborateurs</span></div>
+      <div><b>97<small>M€</small></b><span>Chiffre d'affaires 2024-2025</span></div>
+    </div>
+  </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 04 · Implantations
+       partie : introduction   |   type : contenu   |   ancre : #cimp
+       image attendue : assets/PFE_PRESENTATION_0.png
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="cimp" class="slide" data-sec="0" data-title="Implantations" data-foot="Le Groupe OTE">
+    <style>
+      #cimp .duo{flex:1;min-height:0;display:grid;grid-template-columns:1fr 47%}
+      #cimp .txt{display:flex;flex-direction:column;justify-content:center;padding:0 70px 0 80px}
+      #cimp .sur{font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+        color:var(--insa);margin-bottom:14px}
+      #cimp h1{font-family:var(--f-serif);font-size:46px;font-weight:600;line-height:1.15;color:var(--insa-d)}
+      #cimp .kpi9{display:flex;align-items:baseline;gap:14px;margin:30px 0 34px;padding:22px 0;
+        border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+      #cimp .kpi9 b{font-family:var(--f-serif);font-size:64px;font-weight:600;line-height:1;color:var(--insa)}
+      #cimp .kpi9 span{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+      #cimp .contact{display:flex;flex-direction:column;gap:20px}
+      #cimp .ligne{display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:center}
+      #cimp .ico{width:44px;height:44px;border-radius:50%;background:var(--insa-t);
+        display:flex;align-items:center;justify-content:center}
+      #cimp .ico svg{width:22px;height:22px;fill:none;stroke:var(--insa-d);stroke-width:1.6;
+        stroke-linecap:round;stroke-linejoin:round}
+      #cimp .ligne div:last-child{font-size:19px;line-height:1.4;color:var(--ink)}
+      #cimp .ligne small{display:block;font-size:12px;font-weight:600;letter-spacing:.12em;
+        text-transform:uppercase;color:var(--dim)}
+      #cimp .carte{position:relative;background:var(--insa-d);overflow:hidden}
+      #cimp .carte img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+    </style>
+
+    <div class="duo">
+      <div class="txt">
+        <div class="sur">Implantations</div>
+        <h1>Siège social<br>à Strasbourg</h1>
+        <div class="kpi9"><b>11</b><span>Agences en France</span></div>
+
+        <div class="contact">
+          <div class="ligne">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.800-6.500 11-6.500 11z"/><circle cx="12" cy="10" r="2.4"/></svg></div>
+            <div><small>Adresse</small>1, rue de la Lisière · BP 40110<br>F-67403 ILLKIRCH Cedex</div>
+          </div>
+          <div class="ligne">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M6.500 3.500h3l1.500 4-2 1.500a11 11 0 0 0 6 6l1.500-2 4 1.500v3a2 2 0 0 1-2 2A15.500 15.500 0 0 1 4.500 5.500a2 2 0 0 1 2-2z"/></svg></div>
+            <div><small>Téléphone</small>03 88 67 55 55</div>
+          </div>
+          <div class="ligne">
+            <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5.500" width="18" height="13" rx="1.500"/><path d="M3.500 6.500l8.500 6.500 8.500-6.500"/></svg></div>
+            <div><small>Courriel</small>ote.direction@ote.fr</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="carte"><img src="assets/CARTE_OTE.svg" alt="Carte des implantations du Groupe OTE" onerror="this.remove()"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 05 · Pôle Géomatique
+       partie : introduction   |   type : contenu   |   ancre : #cpole
+       images : assets/OTE_3.jpg (relief) · assets/OTE_4.jpg (zones humides)
+                assets/OTE_5.jpg (habitats) · assets/OTE_6.png (tracé, bandeau large)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="cpole" class="slide" data-sec="0" data-title="Pôle Géomatique" data-foot="Le Groupe OTE">
+    <style>
+      #cpole .fr-body{padding:20px 46px 20px}
+      #cpole .gal{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);
+        grid-template-rows:1fr auto;gap:14px}
+      #cpole .tu{display:flex;flex-direction:column;min-height:0;background:#fff;border:1px solid var(--rule)}
+      #cpole .et{flex:none;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;
+        background:var(--insa-d);padding:9px 16px}
+      #cpole .et i{font-style:normal;font-family:var(--f-serif);font-size:26px;font-weight:600;
+        line-height:1;color:var(--ciel)}
+      #cpole .et b{display:block;font-size:16px;font-weight:600;color:#fff;line-height:1.2}
+      #cpole .et span{display:block;margin-top:2px;font-size:11px;font-weight:600;
+        letter-spacing:.12em;text-transform:uppercase;color:var(--ciel)}
+      #cpole .im{position:relative;flex:1;min-height:0}
+      #cpole .im img{position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);
+        object-fit:contain;display:block}
+      /* bandeau large : étiquette à gauche, image entière à droite */
+      #cpole .tu.large{grid-column:1 / -1;display:grid;grid-template-columns:250px 1fr}
+      #cpole .tu.large .et{grid-template-columns:1fr;align-content:center;gap:8px;padding:0 20px}
+      #cpole .tu.large img{width:100%;height:auto;display:block}
+    </style>
+
+    <div class="ft">
+      <div><h1>Pôle Géomatique</h1><div class="fsub">Département Environnement · OTE Ingénierie</div></div>
+      <div class="fright">La donnée géographique au service des études et des projets</div>
+    </div>
+
+    <div class="fr-body">
+      <div class="gal">
+        <div class="tu">
+          <div class="et"><i>01</i><div><b>Analyse de relief</b><span>Altimétrie · modèles numériques de terrain</span></div></div>
+          <div class="im"><img src="assets/OTE_3.jpg" alt="Carte d'altitude" onerror="this.remove()"></div>
+        </div>
+        <div class="tu">
+          <div class="et"><i>02</i><div><b>Zones humides</b><span>Analyse spatiale · probabilité de présence</span></div></div>
+          <div class="im"><img src="assets/OTE_4.jpg" alt="Probabilité de zone humide" onerror="this.remove()"></div>
+        </div>
+        <div class="tu">
+          <div class="et"><i>03</i><div><b>Habitats naturels</b><span>Relevés de terrain · cartographie</span></div></div>
+          <div class="im"><img src="assets/OTE_5.jpg" alt="Cartographie des habitats" onerror="this.remove()"></div>
+        </div>
+        <div class="tu large">
+          <div class="et"><i>04</i><div><b>Études de tracé</b><span>Infrastructures linéaires · orthophotographie</span></div></div>
+          <img src="assets/OTE_6.png" alt="Tracé sur orthophotographie" onerror="this.remove()">
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 06 · Données 3D
+       partie : introduction   |   type : contenu   |   ancre : #c3d
+       images : assets/OTE_7.png (projet urbain) · assets/OTE_8.jpg (zonage)
+                assets/OTE_9.jpg (chantier) · assets/OTE_10.jpg (éolien)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c3d" class="slide" data-sec="0" data-title="Données 3D" data-foot="Le Groupe OTE">
+    <style>
+      #c3d .fr-body{padding:20px 46px 20px}
+      #c3d .gal{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;
+        grid-template-rows:1fr 1fr;gap:14px}
+      #c3d .tu{display:flex;flex-direction:column;min-height:0;background:#fff;border:1px solid var(--rule)}
+      #c3d .et{flex:none;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;
+        background:var(--insa-d);padding:9px 16px}
+      #c3d .et i{font-style:normal;font-family:var(--f-serif);font-size:26px;font-weight:600;
+        line-height:1;color:var(--ciel)}
+      #c3d .et b{display:block;font-size:16px;font-weight:600;color:#fff;line-height:1.2}
+      #c3d .et span{display:block;margin-top:2px;font-size:11px;font-weight:600;
+        letter-spacing:.12em;text-transform:uppercase;color:var(--ciel)}
+      #c3d .im{position:relative;flex:1;min-height:0}
+      #c3d .im img{position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);
+        object-fit:contain;display:block}
+    </style>
+
+    <div class="ft">
+      <div><h1>La donnée 3D au Pôle Géomatique</h1><div class="fsub">Département Environnement · OTE Ingénierie</div></div>
+      <div class="fright">Des maquettes 3D pour comprendre, concerter et décider</div>
+    </div>
+
+      <div class="fr-body">
+      <div class="gal">
+        <div class="tu">
+          <div class="et"><i>01</i><div><b>Urbanisme réglementaire</b><span>Zonage du PLU en 3D</span></div></div>
+          <div class="im"><img src="assets/OTE_7.jpg" alt="Projet inséré dans une maquette urbaine" onerror="this.remove()"></div>
+        </div>
+        <div class="tu">
+          <div class="et"><i>02</i><div><b>Simulation de chantier</b><span>Phasage · emprises · engins</span></div></div>
+          <div class="im"><img src="assets/OTE_8.jpg" alt="Zonage d'urbanisme en 3D" onerror="this.remove()"></div>
+        </div>
+        <div class="tu">
+          <div class="et"><i>03</i><div><b>Insertions paysagères</b><span>Parc éolien</span></div></div>
+          <div class="im"><img src="assets/OTE_9.jpg" alt="Simulation de chantier en 3D" onerror="this.remove()"></div>
+        </div>
+        <div class="tu">
+          <div class="et"><i>04</i><div><b>Études d'ombrage</b><span>Projet photovoltaïques · visibilité</span></div></div>
+          <div class="im"><img src="assets/OTE_10.png" alt="Insertion paysagère d'un parc éolien" onerror="this.remove()"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 07 · Enjeux et objectifs
+       partie : enjeux   |   type : chapter   |   ancre : #cenj
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="cenj" class="slide" data-sec="0" data-title="Enjeux et objectifs" data-foot="Enjeux et objectifs" data-kind="chapter">
+    <div class="chap">
+      <div class="cpart">Contexte</div>
+      <h1>Enjeux et objectifs</h1>
+      <div class="crule"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 08 · LiDAR HD
+       partie : enjeux   |   type : contenu   |   ancre : #clidar
+       image facultative : assets/LIDAR_HD.jpg (nuage de points, en fond du panneau)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="clidar" class="slide" data-sec="0" data-title="LiDAR HD" data-foot="Enjeux et objectifs">
+    <style>
+      #clidar .fr-body{padding:24px 46px 24px;display:grid;grid-template-columns:430px 1fr;gap:44px}
+
+      /* panneau « la donnée » */
+      #clidar .don{position:relative;overflow:hidden;background:var(--insa-d);color:#fff;
+        padding:38px 36px;display:flex;flex-direction:column;justify-content:space-between}
+      #clidar .don::before{content:'';position:absolute;inset:0;opacity:.3;
+        background:url("assets/LIDAR_HD.jpg") center/cover no-repeat}
+      #clidar .don::after{content:'';position:absolute;inset:0;
+        background:linear-gradient(to bottom,rgba(58,56,92,.55),rgba(58,56,92,.95))}
+      #clidar .don > *{position:relative;z-index:1}
+      #clidar .sur{font-size:12.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ciel)}
+      #clidar .don h2{font-family:var(--f-serif);font-size:62px;font-weight:600;line-height:1;color:#fff;margin-top:12px}
+      #clidar .don p{font-size:17px;line-height:1.45;color:#DDE4EF;margin-top:16px;max-width:none}
+      #clidar .stat{border-top:1px solid rgba(255,255,255,.3);padding-top:22px}
+      #clidar .stat b{display:block;font-family:var(--f-serif);font-size:84px;font-weight:600;line-height:.95;color:#fff}
+      #clidar .stat b small{font-size:30px;font-weight:600;margin-left:8px;color:var(--ciel)}
+      #clidar .stat span{display:block;margin-top:12px;font-size:15px;line-height:1.4;color:#DDE4EF}
+
+      /* colonne de droite */
+      #clidar .col{display:flex;flex-direction:column;min-height:0}
+      #clidar .col .sur{color:var(--insa);padding-bottom:10px;border-bottom:2px solid var(--insa)}
+      #clidar .atouts{flex:1.15;display:grid;grid-template-rows:repeat(3,1fr);margin-bottom:26px}
+      #clidar .at{display:grid;grid-template-columns:56px 1fr auto;gap:20px;align-items:center;
+        border-bottom:1px solid var(--rule)}
+      #clidar .at i{font-style:normal;font-family:var(--f-serif);font-size:34px;font-weight:600;color:var(--ciel)}
+      #clidar .at h3{font-family:var(--f-serif);font-size:23px;font-weight:600;color:var(--insa-d)}
+      #clidar .at p{font-size:16px;line-height:1.4;color:var(--muted);margin-top:4px;max-width:none}
+      #clidar .at em{font-style:normal;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--insa-d);background:var(--insa-t2);padding:7px 12px;white-space:nowrap}
+      #clidar .dom{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px;margin-top:14px}
+      #clidar .dc{background:var(--insa-t);border-left:4px solid var(--insa);padding:0 22px;
+        display:flex;flex-direction:column;justify-content:center}
+      #clidar .dc h3{font-family:var(--f-serif);font-size:19px;font-weight:600;color:var(--insa-d)}
+      #clidar .dc p{font-size:15px;line-height:1.4;color:var(--muted);margin-top:5px;max-width:none}
+    </style>
+
+    <div class="ft">
+      <div><h1>Apport des données 3D haute résolution</h1><div class="fsub">Identification des enjeux</div></div>
+    </div>
+
+    <div class="fr-body">
+      <div class="don">
+        <div>
+          <div class="sur">La donnée utilisée</div>
+          <h2>LiDAR HD</h2>
+          <p>Un nuage de points 3D précis, de haute densité, à terme sur l'ensemble du territoire.</p>
+        </div>
+        <div class="stat">
+          <b>10<small>pts/m²</small></b>
+          <span>Densité de la donnée</span>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="sur">Les atouts de la donnée</div>
+        <div class="atouts">
+          <div class="at">
+            <i>1</i>
+            <div><h3>Exploitable dès sa publication</h3><p>Produit utilisable sans traitements complexes.</p></div>
+            <em>Visualisation</em>
+          </div>
+          <div class="at">
+            <i>2</i>
+            <div><h3>Précise et de haute densité</h3><p>Une donnée HD sur l'ensemble du territoire, à terme.</p></div>
+            <em>Couverture nationale</em>
+          </div>
+          <div class="at">
+            <i>3</i>
+            <div><h3>Structurée, standardisée, homogène</h3><p>Automatisation des « process » pour une utilisation à large échelle.</p></div>
+            <em>Automatisation</em>
+          </div>
+        </div>
+
+        <div class="sur">Domaines d'application et enjeux</div>
+        <div class="dom">
+          <div class="dc"><h3>Urbanisme réglementaire</h3><p>Concertation et travail sur le règlement graphique</p></div>
+          <div class="dc"><h3>Planification et renouvellement urbain</h3><p>Aide à la décision, communication, information</p></div>
+          <div class="dc"><h3>Études paysage et EnR</h3><p>Analyse, calculs d'ombrages, communication, information</p></div>
+          <div class="dc"><h3>Opérations d'aménagement</h3><p>Présentation, communication sur le projet</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 09 · Problématique
+       partie : enjeux   |   type : contenu   |   ancre : #c03
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c03" class="slide" data-sec="0" data-title="Problématique" data-foot="Enjeux et objectifs">
+    <style>
+      #c03 .fr-body{display:flex;flex-direction:column;justify-content:center;gap:44px}
+      #c03 .q{text-align:center;padding:44px 70px;background:var(--insa-d)}
+      #c03 .q small{display:block;font-size:12.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ciel);margin-bottom:18px}
+      #c03 .q p{font-family:var(--f-serif);font-size:32px;line-height:1.4;color:#fff;max-width:44ch;margin:0 auto}
+      #c03 .q b{color:var(--ciel);font-weight:600}
+      #c03 .mots{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+      #c03 .mots div{background:var(--insa-t);border-top:4px solid var(--insa);padding:18px 20px;font-size:15px;line-height:1.4;color:var(--muted)}
+      #c03 .mots b{display:block;font-family:var(--f-serif);font-size:22px;font-weight:600;color:var(--insa-d);margin-bottom:4px}
+    </style>
+    <div class="ft"><div><h1>Problématique</h1><div class="fsub">Enjeux et objectifs</div></div></div>
+    <div class="fr-body">
+      <div class="q">
+        <small>Problématique</small>
+        <p>Comment produire <b>automatiquement</b>, à partir du LiDAR&nbsp;HD, des maquettes 3D <b>photoréalistes</b> et <b>géoréférencées</b>, exploitables dans un SIG&nbsp;?</p>
+      </div>
+      <div class="mots">
+        <div><b>Automatique</b>de l'emprise de projet à la maquette</div>
+        <div><b>Exacte</b>géométrie fidèle au nuage de points</div>
+        <div><b>Géoréférencée</b>intégrable dans un SIG</div>
+        <div><b>Photoréaliste</b>toitures et façades texturées</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 10 · Chaîne de traitement
+       partie : introduction   |   type : contenu   |   ancre : #c08
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c08" class="slide" data-sec="0" data-title="Chaîne de traitement" data-hub="1" data-foot="Chaîne de traitement">
+    <div class="ft">
+      <div><h1>Chaîne de traitement</h1><div class="fsub">Méthodologie — vue d'ensemble</div></div>
+      <div class="fright" style="max-width:440px">Tous les exemples de la méthodologie portent sur la <b>presqu'île de Strasbourg</b>.</div>
+    </div>
+    <div class="fr-body">
+
+      <div class="chain-2r">
+
+        <!-- ── paire 1 : card puis image, même step, adjacents dans le DOM ── -->
+        <div class="cstep" data-jump="1" style="grid-column:1;grid-row:1">
+          <div class="cn">Étape 1</div><h3>Segmentation par apprentissage profond</h3>
+          <p>Un réseau de neurones (YOLO) détoure le bâti dans le nuage de points, puis sa lecture est hybridée avec la BD-TOPO.</p>
+          <div class="cio"><i>Entrée :</i> LiDAR-HD + BD-TOPO (WFS)<br><i>Sortie :</i> emprises au sol vérifiées</div>
+        </div>
+        <figure class="chain-fig" style="grid-column:1;grid-row:2">
+          <div class="fbox"><img src="assets/PFE_PRESENTATION_13.png" alt="Segmentation IA"></div>
+          <figcaption>Emprises détectées par YOLOv8</figcaption>
+        </figure>
+
+        <!-- ── paire 2 ── -->
+        <div class="cstep" data-jump="2" style="grid-column:2;grid-row:1">
+          <div class="cn">Étape 2</div><h3>Reconstruction 3D</h3>
+          <p>Un algorithme (Roofer) reconstruit les toitures en LoD2 sous un paramétrage unique, optimisé grâce à une vérité terrain.</p>
+          <div class="cio"><i>Entrée :</i> LiDAR-HD<br><i>Sortie :</i> multipatch LoD2</div>
+        </div>
+        <figure class="chain-fig" style="grid-column:2;grid-row:2">
+          <div class="fbox"><img src="assets/PFE_PRESENTATION_14.png" alt="Reconstruction 3D"></div>
+          <figcaption>Toitures LoD2 reconstruites par Roofer</figcaption>
+        </figure>
+
+        <!-- ── paire 3 ── -->
+        <div class="cstep" data-jump="3" style="grid-column:3;grid-row:1">
+          <div class="cn">Étape 3</div><h3>Texturage hybride</h3>
+          <p>Orthophotographie pour les toitures, photogrammétrie de rue recalée sur les géométries pour les façades.</p>
+          <div class="cio"><i>Entrée :</i> BD-ORTHO + Panoramax<br><i>Sortie :</i> géométries texturées</div>
+        </div>
+        <figure class="chain-fig" style="grid-column:3;grid-row:2">
+          <div class="fbox"><img src="assets/PFE_PRESENTATION_15.png" alt="Texturage hybride"></div>
+          <figcaption>Géométries texturées, façades et toitures</figcaption>
+        </figure>
+
+        <!-- ── paire 4 ── -->
+        <div class="cstep" data-jump="4" style="grid-column:4;grid-row:1">
+          <div class="cn">Étape 4</div><h3>Rendu temps réel</h3>
+          <p>Export du paquet de scène vers Unreal Engine 5 sans perte du géoréférencement.</p>
+          <div class="cio"><i>Entrée :</i> scène ArcGIS Pro (.slpk)<br><i>Sortie :</i> environnement navigable</div>
+        </div>
+        <figure class="chain-fig" style="grid-column:4;grid-row:2">
+          <div class="fbox"><img src="assets/PFE_PRESENTATION_16.png" alt="Rendu temps réel"></div>
+          <figcaption>Scène navigable dans Unreal Engine 5</figcaption>
+        </figure>
+
+        <!-- ── note pleine largeur ── -->
+        <p class="chain-note" style="grid-column:1/-1;grid-row:3">L'ensemble s'exécute dans ArcGIS Pro via une <b>Python Toolbox</b>, depuis une emprise de projet 2D jusqu'à l'export vers Unreal Engine. Seul le calcul photogrammétrique reste déporté sous RealityScan.</p>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 11 · Partie 1
+       partie : segmentation   |   type : chapter   |   ancre : #c09
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c09" class="slide" data-sec="1" data-title="Partie 1" data-kind="chapter">
+    <div class="chap">
+      <div class="cpart">Première partie</div>
+      <h1>Segmentation du bâti par apprentissage profond</h1>
+      <div class="crule"></div>
+      <div class="cm">
+        <div><b>290 Mds</b>points d'entraînement</div>
+        <div><b>144 550</b>tuiles à 7 bandes</div>
+        <div><b>17,0 j</b>d'entraînement complet</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 12 · Jeu d'apprentissage
+       partie : segmentation   |   type : contenu   |   ancre : #c11
+       mise en page : tableau unique (campagnes + qualité des étiquettes) à
+       gauche, mosaïque 4 villes × 2 exemples à droite, une ligne par ville
+       mosaïque : PFE_PRESENTATION_17 … 24 (raster LiDAR coloré par la hauteur
+       + emprises vectorielles locales), 2 images par ville dans l'ordre du tableau
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c11" class="slide" data-sec="1" data-title="Jeu d'apprentissage">
+    <div class="ft"><div><h1>Constitution du jeu d'apprentissage</h1><div class="fsub">1.1 — Données</div></div>
+      <div class="fright"></div></div>
+    <div class="fr-body">
+      <div class="split" style="grid-template-columns:1fr 420px;align-items:center;gap:36px">
+
+        <div class="stack" style="gap:22px">
+          <p><b>Objectif : un modèle qui colle au plus près à la donnée LiDAR.</b> Les campagnes LiDAR de quatre métropoles sont croisées avec leurs emprises vectorielles locales.</p>
+          <table class="bt" style="width:100%">
+            <caption>Tab. 1 — Campagnes LiDAR mobilisées et qualité des étiquettes issues des référentiels locaux.</caption>
+            <thead>
+              <tr><th></th><th class="n" colspan="4" style="text-align:center;font-weight:400;color:var(--dim);font-size:12.5px">campagne LiDAR</th><th class="n" colspan="2" style="text-align:center;font-weight:400;color:var(--dim);font-size:12.5px;padding-left:22px">étiquettes</th></tr>
+              <tr><th>Ville</th><th class="n">Tuiles</th><th class="n">Points</th><th class="n">Densité</th><th class="n">Année</th><th class="n" style="padding-left:22px">Précision</th><th class="n">Rappel</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Bordeaux</td><td class="n">523</td><td class="n">17,5 <span class="u">Mds</span></td><td class="n">25,8 <span class="u">pts/m²</span></td><td class="n">2020</td><td class="n" style="padding-left:22px">87,3 %</td><td class="n">89,6 %</td></tr>
+              <tr><td>Lille</td><td class="n">5 078</td><td class="n">143,0 <span class="u">Mds</span></td><td class="n">97,4 <span class="u">pts/m²</span></td><td class="n">2020</td><td class="n" style="padding-left:22px">91,7 %</td><td class="n">73,0 %</td></tr>
+              <tr><td>Lyon</td><td class="n">2 842</td><td class="n">51,9 <span class="u">Mds</span></td><td class="n">76,8 <span class="u">pts/m²</span></td><td class="n">2023</td><td class="n" style="padding-left:22px">94,0 %</td><td class="n">76,6 %</td></tr>
+              <tr><td>Strasbourg</td><td class="n">1 662</td><td class="n">77,5 <span class="u">Mds</span></td><td class="n">194,2 <span class="u">pts/m²</span></td><td class="n">2025</td><td class="n" style="padding-left:22px">91,7 %</td><td class="n">87,2 %</td></tr>
+            </tbody>
+          </table>
+          <div class="kpis">
+            <div class="kpi"><div class="kpi-v">25 pts/m²</div><div class="kpi-l">densité homogénéisée</div></div>
+            <div class="kpi"><div class="kpi-v">144 550</div><div class="kpi-l">tuiles d'apprentissage</div></div>
+            <div class="kpi"><div class="kpi-v">87 – 94 %</div><div class="kpi-l">précision des étiquettes</div></div>
+          </div>
+        </div>
+
+        <!-- mosaïque : une ligne par ville, même ordre que le tableau -->
+        <figure style="margin:0">
+          <div style="display:grid;grid-template-columns:88px 1fr 1fr;gap:10px;align-items:center">
+          <div class="small" style="font-weight:600;color:var(--ink);text-align:right">Bordeaux</div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_18.png" alt="Bordeaux — exemple 1" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_19.png" alt="Bordeaux — exemple 2" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          <div class="small" style="font-weight:600;color:var(--ink);text-align:right">Lille</div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_20.png" alt="Lille — exemple 1" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_21.png" alt="Lille — exemple 2" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          <div class="small" style="font-weight:600;color:var(--ink);text-align:right">Lyon</div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_22.png" alt="Lyon — exemple 1" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_23.png" alt="Lyon — exemple 2" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          <div class="small" style="font-weight:600;color:var(--ink);text-align:right">Strasbourg</div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_24.png" alt="Strasbourg — exemple 1" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          <div style="height:140px;background:#F4F4F1;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center"><img src="assets/PFE_PRESENTATION_25.png" alt="Strasbourg — exemple 2" style="max-width:100%;max-height:100%;object-fit:contain;display:block"></div>
+          </div>
+          <figcaption style="margin-top:8px;font-size:12.5px;color:var(--dim);font-style:italic;line-height:1.45">Raster LiDAR coloré par la hauteur, superposé aux emprises vectorielles de chaque métropole.</figcaption>
+        </figure>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 13 · Rastérisation 2,5D
+       partie : segmentation   |   type : contenu (interactif)   |   ancre : #c12
+       source : rapport §3.1.1, tableau 3.4 et équation 3.1
+       interaction : cliquer (ou survoler) une bande à gauche affiche son
+       raster et son rôle à droite. Les boutons ne font pas avancer la slide.
+       images : une par bande, à renseigner dans data-img sur chaque bouton
+       (idéalement les 7 bandes d'une MÊME tuile, mêlant bâti et végétation)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c12" class="slide" data-sec="1" data-title="Rastérisation 2,5D">
+    <style>
+      #c12 .bx{display:grid;grid-template-columns:330px 1fr;gap:28px;align-items:stretch}
+      #c12 .bl{display:flex;flex-direction:column;gap:7px}
+      #c12 .bl button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;
+        padding:9px 14px;border:1px solid var(--rule);border-left:4px solid var(--insa);background:#fff;transition:background .2s,transform .2s}
+      #c12 .bl button.d{border-left-color:var(--slate)}
+      #c12 .bl button .n{font-family:var(--f-serif);font-size:15px;color:var(--dim)}
+      #c12 .bl button b{font-family:var(--f-serif);font-size:17px;color:var(--ink)}
+      #c12 .bl button span:last-child{font-size:12.5px;color:var(--dim)}
+      #c12 .bl button:hover{background:var(--insa-t)}
+      #c12 .bl button.on{background:var(--insa-t);transform:translateX(6px)}
+      #c12 .bl button.d.on,#c12 .bl button.d:hover{background:var(--slate-t)}
+      #c12 .bv{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;border:1px solid var(--rule);background:#FBFBF9;padding:18px}
+      #c12 .bv .im{aspect-ratio:1;max-height:360px;justify-self:center;background:#EEE;display:flex;align-items:center;justify-content:center;overflow:hidden}
+      #c12 .bv .im img{width:100%;height:100%;object-fit:contain;display:block;transition:opacity .25s}
+      #c12 .bv h3{font-family:var(--f-serif);font-size:24px;color:var(--insa-d);margin:0 0 4px}
+      #c12 .bv .k{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+      #c12 .bv p{font-size:17px;line-height:1.55;margin:0}
+      #c12 .bkey{display:flex;gap:22px;white-space:nowrap;font-size:12.5px;color:var(--dim);margin-top:6px}
+      #c12 .bkey i{display:inline-block;width:14px;height:3px;background:var(--insa);vertical-align:middle;margin-right:6px}
+      #c12 .bkey i.d{background:var(--slate)}
+    </style>
+    <div class="ft"><div><h1>Rastérisation 2,5D du nuage de points</h1><div class="fsub">1.2 — Mise en forme des données</div></div>
+      <div class="fright"></div></div>
+    <div class="fr-body" style="display:flex;flex-direction:column;justify-content:center;gap:26px">
+
+      <p>Un réseau de vision attend une image. Chaque dalle est rastérisée à 25 cm en <b>sept canaux</b> : </p>
+
+      <div class="bx">
+        <div>
+          <!-- ── IMAGES À REMPLACER : une par bande, dans data-img ── -->
+          <div class="bl">
+            <button data-b="0" data-img="assets/PFE_PRESENTATION_26.png" class="on"><span class="n">1</span><b>z min</b><span>dernier écho</span></button>
+            <button data-b="1" data-img="assets/PFE_PRESENTATION_27.png"><span class="n">2</span><b>z max</b><span>premier écho</span></button>
+            <button data-b="2" data-img="assets/PFE_PRESENTATION_28.png"><span class="n">3</span><b>z moyen</b><span>tendance</span></button>
+            <button data-b="3" data-img="assets/PFE_PRESENTATION_29.png"><span class="n">4</span><b>écart-type</b><span>rugosité</span></button>
+            <button data-b="4" data-img="assets/PFE_PRESENTATION_30.png" class="d"><span class="n">5</span><b>MNT</b><span>sol nu</span></button>
+            <button data-b="5" data-img="assets/PFE_PRESENTATION_31.png" class="d"><span class="n">6</span><b>hauteur</b><span>max − MNT</span></button>
+            <button data-b="6" data-img="assets/PFE_PRESENTATION_32.png" class="d"><span class="n">7</span><b>épaisseur</b><span>min − MNT</span></button>
+          </div>
+          <div class="bkey"><span><i></i>agrégation directe du nuage</span><span><i class="d"></i>dérivée du MNT</span></div>
+        </div>
+
+        <div class="bv">
+          <!-- image affichée à l'arrivée = celle de la bande 1 -->
+          <div class="im"><img id="c12-img" src="assets/PFE_PRESENTATION_25.png" alt="Bande 1"></div>
+          <div>
+            <div class="k" id="c12-k">Bande 1 · agrégation directe</div>
+            <h3 id="c12-t">Altitude minimale</h3>
+            <p id="c12-p">Dernier écho de chaque cellule : le sol, ou ce qui se trouve sous le couvert végétal. C'est aussi la base de la reconstruction du MNT.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi"><div class="kpi-v">0,25 m</div><div class="kpi-l">par pixel</div></div>
+        <div class="kpi"><div class="kpi-v">640 px</div><div class="kpi-l">par tuile, soit 160 m de côté</div></div>
+        <div class="kpi"><div class="kpi-v">144 550</div><div class="kpi-l">tuiles à 7 bandes produites</div></div>
+        <div class="kpi"><div class="kpi-v">290 Mds</div><div class="kpi-l">de points sources</div></div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      var B = [
+        ['Altitude minimale', 'agrégation directe', "Dernier écho de chaque cellule : le sol, ou ce qui se trouve sous le couvert végétal. C'est aussi la base de la reconstruction du MNT."],
+        ['Altitude maximale', 'agrégation directe', "Premier écho : l'enveloppe supérieure du sursol, toitures comme cimes d'arbres."],
+        ['Altitude moyenne', 'agrégation directe', "Tendance centrale de la cellule, qui atténue le bruit de mesure."],
+        ['Écart-type', 'agrégation directe', "Rugosité : une toiture plane donne une dispersion faible, la canopée une dispersion forte. Discrimine directement bâti et végétation."],
+        ['MNT', 'dérivée du MNT', "Sol nu reconstruit à partir de z min par filtres morphologiques : érosion, filtre médian, seconde érosion."],
+        ['Hauteur', 'dérivée du MNT', "z max − MNT : hauteur du sursol au-dessus du sol. Élimine le relief naturel, un bâtiment en pente reste un bâtiment."],
+        ['Épaisseur', 'dérivée du MNT', "z min − MNT : pénétration du faisceau. Nulle sur un toit opaque, significative sous un arbre où le laser atteint le sol."]
+      ];
+      var s = document.getElementById('c12');
+      var img = document.getElementById('c12-img');
+      var boutons = s.querySelectorAll('.bl button');
+      function show(i) {
+        boutons.forEach(function (b) { b.classList.toggle('on', +b.dataset.b === i); });
+        img.style.opacity = 0;
+        setTimeout(function () {
+          img.src = boutons[i].dataset.img;     // image lue sur le bouton
+          img.alt = 'Bande ' + (i + 1);
+          img.style.opacity = 1;
+        }, 150);
+        document.getElementById('c12-k').textContent = 'Bande ' + (i + 1) + ' · ' + B[i][1];
+        document.getElementById('c12-t').textContent = B[i][0];
+        document.getElementById('c12-p').textContent = B[i][2];
+      }
+      boutons.forEach(function (b) {
+        b.addEventListener('click', function () { show(+b.dataset.b); });
+        b.addEventListener('mouseenter', function () { show(+b.dataset.b); });
+      });
+      // à chaque arrivée sur le cadre, on repart de la bande 1
+      document.addEventListener('deck:enter', function (e) { if (e.detail.slide === s) show(0); });
+    })();
+    </script>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 14 · Hybridation des emprises
+       partie : segmentation   |   type : contenu (balayage au clic)   |   ancre : #c15
+       déroulé : 1) tableau des règles  2) un trait rouge balaie l'image et
+       révèle les emprises hybridées par-dessus la segmentation seule
+       3) contrôles topologiques. Retour arrière = balayage inverse.
+       images : PFE_PRESENTATION_34 = avant (segmentation YOLO seule)
+                PFE_PRESENTATION_35 = après (emprises hybridées)
+                même emprise, même cadrage, mêmes dimensions
+                --r : format des images (largeur / hauteur), ex. 4/3, 16/9
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c15" class="slide" data-sec="1" data-title="Hybridation des emprises" data-anim="1">
+    <style>
+      #c15 .lay{display:grid;grid-template-columns:500px 1fr;gap:34px;height:100%;min-height:0;align-items:center}
+      #c15 .col{display:flex;flex-direction:column;gap:18px}
+      #c15 .rg{display:grid;grid-template-columns:84px 70px 1fr;align-items:stretch;border-top:1.4px solid var(--ink);border-bottom:1.4px solid var(--ink)}
+      #c15 .rg > div{padding:12px 6px;border-bottom:1px solid var(--rule);display:flex;flex-direction:column;justify-content:center}
+      #c15 .rg > .h{font-size:13px;font-weight:600;color:var(--ink);padding:8px 6px;border-bottom:1px solid var(--ink)}
+      #c15 .rg > div:nth-last-child(-n+3){border-bottom:0}
+      #c15 .rg .c{align-items:center;font-size:24px;line-height:1;font-weight:700}
+      #c15 .rg .oui{color:var(--insa)}
+      #c15 .rg .non{color:#C9C9C4}
+      #c15 .rg .dec b{align-self:flex-start;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:#fff;padding:3px 9px;margin-bottom:4px}
+      #c15 .rg .dec span{font-size:15.5px;color:var(--ink)}
+      #c15 .k1{background:var(--slate)} #c15 .k2{background:var(--insa)} #c15 .k3{background:var(--insa-dd)}
+
+      /* ── image avant / après, révélée par balayage ── */
+      #c15 .fig2{display:flex;flex-direction:column;gap:8px;min-height:0;height:100%;justify-content:center;margin:0}
+      #c15 .scene{position:relative;width:100%;aspect-ratio:var(--r,4/3);max-height:calc(100% - 30px);
+        border:1px solid var(--rule);background:#FBFBF9;overflow:hidden}
+      #c15 .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+      #c15 .scene .apres{position:absolute;inset:0;opacity:1;transform:none;
+        clip-path:inset(0 100% 0 0);transition:clip-path 1.6s cubic-bezier(.65,0,.35,1)}
+      #c15 .scene .apres.on{clip-path:inset(0 0 0 0)}
+      #c15 .scene .trait{position:absolute;top:0;bottom:0;left:0;width:3px;background:var(--insa);
+        box-shadow:0 0 14px rgba(61,90,148,.6);opacity:0;transform:none;pointer-events:none}
+      #c15 .scene .trait.on{animation:c14-balaye 1.6s cubic-bezier(.65,0,.35,1)}
+      @keyframes c14-balaye{0%{left:0;opacity:1}90%{opacity:1}100%{left:100%;opacity:0}}
+      #c15 .etq{position:absolute;top:12px;left:12px;z-index:5;font-size:12.5px;color:#fff;padding:5px 11px;transition:opacity .4s}
+      #c15 .etq.av{background:var(--slate)}
+      #c15 .etq.ap{background:var(--insa-d);transform:none}
+      #c15 .apres.on ~ .etq.av{opacity:0}
+      #c15 figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+    </style>
+    <div class="ft"><div><h1>Hybridation des emprises</h1><div class="fsub">1.3 — Résultat</div></div>
+    <div class="fright"></div></div>
+    <div class="fr-body">
+      <div class="lay">
+
+        <div class="col">
+          <p style="margin:0">Le réseau de neurones detecte correctement le bâti sans le découper. Le croisement avec la BD-TOPO tranche au cas par cas :</p>
+
+          <!-- clic 1 : règle de décision (✓ = bâtiment présent dans la source) -->
+          <div class="rg">
+            <div class="h" style="text-align:center">BD-TOPO</div><div class="h" style="text-align:center">LiDAR</div><div class="h">Décision</div>
+
+            <div class="c oui">✓</div><div class="c oui">✓</div>
+            <div class="dec"><b class="k1">conservée</b><span>emprise BD-TOPO, géométrie la plus fine</span></div>
+
+            <div class="c non">✗</div><div class="c oui">✓</div>
+            <div class="dec"><b class="k2">ajoutée</b><span>emprise YOLO : bâtiment détruit</span></div>
+
+            <div class="c oui">✓</div><div class="c non">✗</div>
+            <div class="dec"><b class="k3">retirée</b><span>démoli ou pas encore construit</span></div>
+          </div>
+
+          <!-- clic 2 : phrase + balayage de l'image (même data-step) -->
+          <p class="small frag" data-step="hyb" style="margin:0">La maquette reflète ainsi l'état du territoire <b>à la date du levé LiDAR</b>, et non celui du dernier millésime vectoriel.</p>
+        </div>
+
+        <figure class="fig2">
+          <div class="scene" style="--r:4/3">
+            <img src="assets/PFE_PRESENTATION_34.png" alt="Segmentation YOLO seule">
+            <div class="apres frag" data-step="hyb"><img src="assets/PFE_PRESENTATION_35.png" alt="Emprises après hybridation"></div>
+            <div class="trait frag" data-step="hyb"></div>
+            <span class="etq av">segmentation YOLO seule</span>
+            <span class="etq ap frag" data-step="hyb">après hybridation</span>
+          </div>
+          <figcaption><b style="font-style:normal;color:var(--ink)">Fig. 5</b> — La BD-TOPO structure, la détection arbitre.</figcaption>
+        </figure>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 15 · Partie 2
+       partie : reconstruction   |   type : chapter   |   ancre : #c16
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c16" class="slide" data-sec="2" data-title="Partie 2" data-kind="chapter">
+    <div class="chap">
+      <div class="cpart">Deuxième partie</div>
+      <h1>Reconstruction 3D des toitures</h1>
+      <div class="crule"></div>
+      <div class="cm">
+        <div><b>3 → 1</b>configurations</div>
+        <div><b>21,2 cm</b>précision moyenne</div>
+        <div><b>12,1 cm</b>exactitude</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 16 · Fonctionnement de Roofer
+       partie : reconstruction   |   type : contenu   |   ancre : #c17
+       mise en page : principe en quatre étapes à gauche, paramétrisation à droite
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c17" class="slide" data-sec="2" data-title="Fonctionnement de Roofer">
+    <style>
+      #c17 .lay{display:grid;grid-template-columns:1fr 1.05fr;gap:50px;height:100%;min-height:0;align-items:center}
+      #c17 .sur{font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--insa);
+        padding-bottom:10px;border-bottom:2px solid var(--insa);margin-bottom:8px}
+      #c17 .et{display:grid;grid-template-columns:56px 1fr;gap:20px;align-items:center;padding:18px 0;border-bottom:1px solid var(--rule)}
+      #c17 .et i{font-style:normal;font-family:var(--f-serif);font-size:34px;font-weight:600;color:var(--ciel)}
+      #c17 .et h3{font-family:var(--f-serif);font-size:22px;font-weight:600;color:var(--insa-d)}
+      #c17 .et p{font-size:15.5px;color:var(--muted);margin-top:3px;max-width:none}
+      #c17 table.bt{font-size:16px;margin-top:8px}
+      #c17 table.bt td .r{display:block;font-size:13px;color:var(--dim);margin-top:2px}
+      #c17 .un{margin-top:24px;background:var(--insa-d);color:#fff;padding:20px 24px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+      #c17 .un b{font-family:var(--f-serif);font-size:40px;font-weight:600;line-height:1;white-space:nowrap}
+      #c17 .un span{font-size:16px;line-height:1.4;color:#DDE4EF}
+    </style>
+    <div class="ft"><div><h1>Reconstruction des toitures avec Roofer</h1><div class="fsub">2.1 — Méthode</div></div></div>
+    <div class="fr-body">
+      <div class="lay">
+        <div>
+          <div class="sur">Principe</div>
+          <div class="et"><i>1</i><div><h3>Emprise et nuage de points</h3><p>Le LiDAR HD est découpé par l'emprise de chaque bâtiment.</p></div></div>
+          <div class="et"><i>2</i><div><h3>Détection des plans de toiture</h3><p>Les points sont regroupés en pans.</p></div></div>
+          <div class="et"><i>3</i><div><h3>Découpage de l'emprise</h3><p>Les intersections des pans dessinent les arêtes du toit.</p></div></div>
+          <div class="et"><i>4</i><div><h3>Extrusion en LoD2</h3><p>Chaque pan est élevé à sa hauteur : la maquette nue.</p></div></div>
+        </div>
+        <div>
+          <div class="sur">Paramétrisation</div>
+          <table class="bt" style="width:100%">
+            <thead><tr><th>Paramètre</th><th class="n">Domaine</th><th class="n">Retenu</th></tr></thead>
+            <tbody>
+              <tr><td>Facteur de complexité<span class="r">finesse contre simplicité du modèle</span></td><td class="n">0,30 – 0,70</td><td class="n hi">0,54</td></tr>
+              <tr><td>ε <span class="u">(m)</span><span class="r">distance maximale point – plan</span></td><td class="n">0,40 – 1,00</td><td class="n hi">0,63</td></tr>
+              <tr><td>k <span class="u">(voisins)</span><span class="r">taille du voisinage interrogé</span></td><td class="n">20 – 60</td><td class="n hi">38</td></tr>
+              <tr><td>Points minimaux par plan<span class="r">seuil d'existence d'un pan</span></td><td class="n">30 – 100</td><td class="n hi">48</td></tr>
+            </tbody>
+          </table>
+          <div class="un"><b>3 → 1</b><span>Un paramétrage unique, optimisé sur une vérité terrain, remplace trois configurations typologiques : plus aucun choix manuel.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 17 · Résultats de la reconstruction
+       partie : reconstruction   |   type : contenu   |   ancre : #c18
+       source : rapport §3.1.3 et §4.1.4, tableau 4.7
+       mise en page : paramètres optimisés + indicateurs à gauche,
+       scène 3D interactive (iframe) à droite
+       IFRAME : coller le lien d'intégration dans data-embed (et data-link)
+       data-kind="map" = l'iframe est chargée à l'arrivée sur le cadre
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c18" class="slide" data-sec="2" data-title="Résultats de la reconstruction" data-kind="map">
+    <style>
+      #c18 .lay{display:grid;grid-template-columns:330px 1fr;gap:30px;height:100%;min-height:0}
+      #c18 .col p:first-child{font-size:16.5px;line-height:1.5}
+      #c18 table.bt{font-size:15px}
+      #c18 table.bt th,#c18 table.bt td{padding-right:10px}
+      #c18 .kpis .kpi-v{font-size:30px}
+      #c18 .kpis .pm{font-size:17px;font-weight:400;color:var(--muted)}
+      #c18 .kpis .kpi-l b{color:var(--ink)}
+      #c18 .src{font-size:12px;font-style:italic;color:var(--dim);margin-top:8px}
+      #c18 .col{display:flex;flex-direction:column;justify-content:center;gap:20px;min-height:0}
+      #c18 table.bt td .r{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
+      #c18 .scene3d{display:flex;flex-direction:column;gap:8px;min-height:0;height:100%}
+      #c18 .scene3d .mapwrap{flex:1}
+      #c18 .scene3d .etq{position:absolute;top:10px;left:10px;z-index:4;font-size:12.5px;color:#fff;background:var(--insa-d);padding:4px 10px}
+      #c18 .scene3d figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+    </style>
+    <div class="ft"><div><h1>Résultats : la maquette nue</h1><div class="fsub">2.2 — Résultats</div></div>
+      <div class="fright">Référence : maquette LoD2 de l'Eurométropole de Strasbourg, trois zones d'évaluation.</div></div>
+    <div class="fr-body">
+      <div class="lay">
+
+        <div class="col">
+          <div>
+            <div class="kpis" style="grid-template-columns:1fr;gap:26px">
+              <div class="kpi"><div class="kpi-v">21,2 <span class="pm">± 18,0 cm</span></div><div class="kpi-l"><b>Précision</b> · régularité des pans reconstruits</div></div>
+              <div class="kpi"><div class="kpi-v">12,1 <span class="pm">± 26,0 cm</span></div><div class="kpi-l"><b>Exactitude</b> · écart à la maquette LoD2 de l'Eurométropole</div></div>
+            </div>
+            <div class="src">Moyenne ± écart-type sur les trois zones d'évaluation (Maroni, 2025).</div>
+          </div>
+
+          <p class="small" style="margin:0">Une <b>configuration unique</b>, sans choix manuel.</p>
+        </div>
+
+        <!-- ══ SCÈNE 3D : remplacer les deux liens ci-dessous ══ -->
+        <figure class="scene3d" style="margin:0">
+          <div class="mapwrap"
+               data-embed="https://unistra.maps.arcgis.com/apps/instant/3dviewer/index.html?appid=ba8ad48b17be423a859ac93d50c29784"
+               data-link="https://unistra.maps.arcgis.com/apps/instant/3dviewer/index.html?appid=ba8ad48b17be423a859ac93d50c29784"
+               data-label="Modélisation Roofer et maquette EMS">
+            <div class="mapfall">
+              <h3>Scène 3D interactive</h3>
+              <p>Collez le lien d'intégration de la scène dans l'attribut <code>data-embed</code> pour l'afficher ici.</p>
+              <a href="#" target="_blank" rel="noopener">Ouvrir dans un onglet</a>
+            </div>
+          </div>
+          <figcaption>Modélisation Roofer confrontée à la maquette LoD2 de l'EMS.</figcaption>
+        </figure>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 18 · Partie 3
+       partie : texturage   |   type : chapter   |   ancre : #c19
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c19" class="slide" data-sec="3" data-title="Partie 3" data-kind="chapter">
+    <div class="chap">
+      <div class="cpart">Troisième partie</div>
+      <h1>Texturage photoréaliste hybride</h1>
+      <div class="crule"></div>
+      <div class="cm">
+        <div><b>98,6 %</b>de toiture texturée</div>
+        <div><b>13 373</b>panoramas exploités</div>
+        <div><b>≈ 45 %</b>de façades couvertes</div>
+      </div>
+    </div>
+  </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 19 · Toitures : projection orthophotographique
+       partie : texturage   |   type : contenu   |   ancre : #c20
+       mise en page : bandeau haut compact (méthode · équation + légende ·
+       résultat), puis la planche d'illustration en grand sur toute la largeur
+       image : assets/PFE_PRESENTATION_36.png
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c20" class="slide" data-sec="3" data-title="Toitures : projection orthophotographique">
+    <style>
+      #c20 .haut{display:grid;grid-template-columns:1.25fr 1fr 250px;gap:30px;align-items:center}
+      #c20 .haut p.intro{margin:0 0 10px;font-size:15.5px;line-height:1.5}
+      #c20 .eq2{font-family:var(--f-serif);font-size:21px;line-height:1.8;color:var(--ink);padding:6px 0 6px 18px;border-left:3px solid var(--insa);position:relative}
+      #c20 .eq2 i{font-style:italic}
+      #c20 .eq2 .note{font-family:var(--f-sans);font-size:13px;color:var(--muted);margin-left:12px}
+      #c20 .eqleg{margin-top:0;gap:6px}
+      #c20 .eqleg div{font-size:13.5px;line-height:1.4}
+      #c20 .res{border-top:1px solid var(--ink);padding-top:10px}
+      #c20 .res .v{font-family:var(--f-serif);font-size:34px;font-weight:600;color:var(--insa-d);line-height:1}
+      #c20 .res .l{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.4}
+      #c20 .vue{margin:0;flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+      #c20 .vue .im{flex:1;min-height:0}
+      #c20 .vue img{width:100%;height:100%;object-fit:contain;display:block}
+      #c20 .vue figcaption{font-size:12.5px;font-style:italic;color:var(--muted);text-align:center}
+    </style>
+    <div class="ft"><div><h1>Toitures : projection orthophotographique</h1><div class="fsub">3.1 — Méthode</div></div>
+      <div class="fright">BD-ORTHO : nationale, ouverte, déjà redressée et géoréférencée.</div></div>
+    <div class="fr-body" style="display:flex;flex-direction:column;gap:22px">
+
+      <div class="haut" style="grid-template-columns:1fr 300px">
+        <p class="intro" style="font-size:19px;margin:0">Chaque sommet de toit est projeté <b>à la verticale</b> sur l'orthophotographie.</p>
+        <div class="res">
+          <div class="v">98,6 %</div>
+          <div class="l">de la surface de toiture correctement texturée</div>
+        </div>
+      </div>
+
+      <!-- IMAGE : à remplacer par une planche limitée à DEUX paires de secteurs -->
+      <!-- illustration en grand -->
+        <figure class="vue">
+        <div class="im"><img src="assets/PFE_PRESENTATION_36.png" alt="Orthophotographie et projection sur les toitures"></div>
+        <figcaption>Orthophotographie (a) et projection sur les facettes de toiture (b), sur la presqu'île de Strasbourg.</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 20 · Façades : chaîne photogrammétrique
+       partie : texturage   |   type : contenu   |   ancre : #c21
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c21" class="slide" data-sec="3" data-title="Façades : chaîne photogrammétrique">
+    <!-- styles partagés par les cadres 20 à 25 (barre de progression .ftrack) -->
+    <style>
+      .ftrack{display:flex;align-items:center;gap:0;margin-bottom:2px}
+      .ftrack i{flex:1;height:2px;background:var(--rule);min-width:18px}
+      .ft-e{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--dim);padding:6px 12px;border:1px solid var(--rule);background:#fff;white-space:nowrap}
+      .ft-e b{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#E6E6E1;color:var(--muted);font-size:11.5px}
+      .ft-e.done{color:var(--muted)}
+      .ft-e.done b{background:var(--insa-t);color:var(--insa-d)}
+      .ft-e.on{background:var(--insa);border-color:var(--insa);color:#fff;font-weight:600}
+      .ft-e.on b{background:#fff;color:var(--insa)}
+      .fstep-body{display:grid;grid-template-columns:1fr 1fr;gap:34px;flex:1;min-height:0;align-items:center}
+      .fstep-body>.vue{align-self:stretch}
+      .fstep-body .col{display:flex;flex-direction:column;gap:16px}
+      .fstep-body .vue{margin:0;height:100%;display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:0}
+      .fstep-body .vue .im{min-height:0;flex:0 1 auto}
+      .fstep-body .vue img{width:100%;height:auto;max-height:680px;object-fit:contain;display:block}
+      .fstep-body .vue figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+      .kline{display:flex;gap:30px}
+      .kline div{font-size:13.5px;color:var(--muted);line-height:1.35}
+      .kline b{display:block;font-family:var(--f-serif);font-size:28px;font-weight:600;color:var(--insa-d);line-height:1.1}
+      .fchain .cstep{padding:22px 20px;display:flex;flex-direction:column}
+      .fchain .cstep h3{font-size:24px;margin:4px 0 10px}
+      .fchain .cstep p{font-size:15.5px;line-height:1.5;flex:1}
+      .fchain .cstep .kv{margin-top:18px;padding-top:12px;border-top:1px solid var(--rule);font-family:var(--f-serif);font-size:30px;font-weight:600;color:var(--insa-d);line-height:1.1}
+      .fchain .cstep .kv small{display:block;font-family:var(--f-sans);font-size:13px;font-weight:400;color:var(--muted);margin-top:4px}
+      #c21 .chain-note{font-size:18px}
+    </style>
+    <div class="ft"><div><h1>Façades : chaîne photogrammétrique</h1><div class="fsub">3.2 — Vue d'ensemble</div></div>
+      <div class="fright"></div></div>
+    <div class="fr-body">
+      <div class="stack grow" style="justify-content:center">
+        <div class="chain five fchain">
+          <div class="cstep static"><div class="cn">Étape 1</div><h3>Panoramax</h3><p>Prises de vues terrestre sous la forme de panorama.</p><div class="kv">13 373<small>panoramas 360° retenus</small></div></div>
+          <div class="cstep static"><div class="cn">Étape 2</div><h3>Dépliage</h3><p>Six vues planes par panorama, égalisées par CLAHE.</p><div class="kv">× 6<small>vues planes par panorama</small></div></div>
+          <div class="cstep static"><div class="cn">Étape 3</div><h3>Photogrammétrie</h3><p>RealityScan automatisé et piloté en ligne de commande, initialisé par la trajectoire.</p><div class="kv">237 M<small>points dans le nuage brut</small></div></div>
+          <div class="cstep static"><div class="cn">Étape 4</div><h3>Recalage</h3><p>Calage sur le MNT puis sur les façades théoriques, par estimateurs robustes.</p><div class="kv">− 54 %<small>de dispersion après recalage</small></div></div>
+          <div class="cstep static"><div class="cn">Étape 5</div><h3>Ortho-façades</h3><p>Rastérisation du nuage recalé par splatting, dans le repère local de chaque mur.</p><div class="kv">50 cm<small>tranche utile par mur</small></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 21 · Étape 1 · Téléchargement Panoramax
+       partie : texturage   |   type : contenu   |   ancre : #c22
+       source : rapport §2.3.5 (note 13), §3.2.2, tableau 3.12, figure 3.9
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c22" class="slide" data-sec="3" data-title="Étape 1 · Panoramax">
+    <style>
+      #c22 .fstep-body{grid-template-columns:1fr 1.4fr;gap:34px}
+      #c22 .pmx{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;background:var(--insa-t);border-left:4px solid var(--insa);padding:12px 16px}
+      #c22 .pmx .tag{font-family:var(--f-serif);font-size:21px;font-weight:600;color:var(--insa-d)}
+      #c22 .pmx p{margin:0;font-size:14.5px;line-height:1.45;color:var(--ink)}
+      #c22 table.bt{font-size:14.5px}
+      #c22 table.bt td,#c22 table.bt th{padding-top:5px;padding-bottom:5px}
+      #c22 .tuil{display:flex;gap:26px;align-items:flex-end;margin-bottom:4px}
+      #c22 .tuil p{margin:0;font-size:14.5px;line-height:1.45;color:var(--muted);flex:1}
+      #c22 .tuil .kline b{font-size:26px}
+    </style>
+    <div class="ft"><div><h1>Étape 1 · Sélectionner les panoramas</h1><div class="fsub">3.2 — Façades · étape 1 sur 5</div></div></div>
+    <div class="fr-body" style="display:flex;flex-direction:column;gap:22px">
+      <div class="ftrack"><span class="ft-e on"><b>1</b>Panoramax</span><i></i><span class="ft-e "><b>2</b>Dépliage</span><i></i><span class="ft-e "><b>3</b>Photogrammétrie</span><i></i><span class="ft-e "><b>4</b>Recalage</span><i></i><span class="ft-e "><b>5</b>Ortho-façades</span></div>
+      <div class="fstep-body">
+        <div class="col">
+          <div class="pmx">
+            <span class="tag">Panoramax</span>
+            <p>Vues immersives <b>libres et collaboratives</b> · IGN et OpenStreetMap France</p>
+          </div>
+          <ul class="it">
+            <li><b>Sélection</b> : séquences 360° entières</li>
+            <li><b>Rognage</b> : tronçon compris dans l'emprise</li>
+            <li><b>Filtrage</b> : au moins 3 m entre deux vues</li>
+          </ul>
+          <table class="bt">
+            <thead><tr><th>Étape</th><th class="n">Panoramas</th></tr></thead>
+            <tbody>
+              <tr><td>Renvoyés par l'API</td><td class="n">283 294</td></tr>
+              <tr><td>Conservés après rognage</td><td class="n">57 362</td></tr>
+              <tr><td>Téléchargés après filtrage</td><td class="n hi">13 373</td></tr>
+              <tr><td>Espacement médian</td><td class="n">0,70 → <b>3,82 m</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <figure class="vue">
+          <div class="tuil">
+            <p><b>Tuilage par quadtree</b> : un projet photogrammétrique par tuile.</p>
+            <div class="kline"><div><b>36</b>tuiles</div><div><b>≤ 500</b>panos / tuile</div><div><b>25 m</b>tampon</div></div>
+          </div>
+          <div class="im"><img src="assets/PFE_PRESENTATION_37.png" alt="Tuilage quadtree des panoramas"></div>
+          <figcaption>Tuilage quadtree des positions de panoramas sur la presqu'île (rapport, figure 3.9).</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 22 · Étape 2 · Dépliage des panoramas
+       partie : texturage   |   type : contenu   |   ancre : #c23
+       source : rapport §3.2.2, figures 3.7 et 3.11, notes 6, 7 et 9
+       clics : 1) géométrie + figure du dépliage   2) CLAHE + figure SIFT
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c23" class="slide" data-sec="3" data-title="Étape 2 · Dépliage">
+    <style>
+      #c23 .fstep-body{grid-template-columns:1fr 1.08fr;gap:34px}
+      #c23 .col{height:100%;justify-content:center}
+      #c23 .pile{display:flex;flex-direction:column;justify-content:center;gap:12px;height:100%;min-height:0}
+      #c23 .pile figure{margin:0}
+      #c23 .pile img{width:100%;height:auto;display:block}
+      #c23 .pile figcaption{font-size:12.5px;font-style:italic;color:var(--muted);margin-top:3px}
+      #c23 .gain{display:flex;align-items:baseline;gap:12px;margin:4px 0 0 20px}
+      #c23 .gain b{font-family:var(--f-serif);font-size:28px;font-weight:600;color:var(--insa-d)}
+      #c23 .gain span{font-size:13.5px;color:var(--muted)}
+      #c23 .fn{margin-top:auto;padding-top:10px;border-top:1px solid var(--rule);font-size:12.5px;line-height:1.45;color:var(--dim);display:flex;flex-direction:column;gap:6px}
+      #c23 .fn span{display:block}
+      #c23 sup{color:var(--insa);font-weight:700}
+    </style>
+    <div class="ft"><div><h1>Étape 2 · Déplier les panoramas en vues planes</h1><div class="fsub">3.2 — Façades · étape 2 sur 5</div></div></div>
+    <div class="fr-body" style="display:flex;flex-direction:column;gap:22px">
+      <div class="ftrack"><span class="ft-e done"><b>1</b>Panoramax</span><i></i><span class="ft-e on"><b>2</b>Dépliage</span><i></i><span class="ft-e "><b>3</b>Photogrammétrie</span><i></i><span class="ft-e "><b>4</b>Recalage</span><i></i><span class="ft-e "><b>5</b>Ortho-façades</span></div>
+      <div class="fstep-body">
+        <div class="col">
+          <p style="margin:0;font-size:20px">Un panorama <b>→ six vues planes</b></p>
+          <ul class="it">
+            <li><b>Tous les 60°</b>, champ de 90°</li>
+            <li><b>Recouvrement de 30°</b> entre vues voisines</li>
+            <li><b>Caméra virtuelle</b> sans distorsion</li>
+            <li><b>Égalisation CLAHE</b> : contraste rehaussé pour la détection SIFT</li>
+          </ul>
+          <div class="gain"><b>× 2,6</b><span>points SIFT détectés après égalisation</span></div>
+        </div>
+        <div class="pile">
+          <figure>
+            <img src="assets/PFE_PRESENTATION_38.png" alt="Panorama déplié en six vues">
+            <figcaption>Secteurs angulaires extraits du panorama (a) et vues planes produites (b).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/PFE_PRESENTATION_39.png" alt="Points SIFT avant et après CLAHE">
+            <figcaption>Points SIFT détectés avant (a) et après (b) égalisation CLAHE.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 23 · Étape 3 · Reconstruction photogrammétrique
+       partie : texturage   |   type : contenu   |   ancre : #c24
+       IFRAME : coller le lien d'intégration dans data-embed (et data-link)
+       data-kind="map" = l'iframe est chargée à l'arrivée sur le cadre
+       clic : le nuage interactif recouvre la capture RealityScan
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c24" class="slide" data-sec="3" data-title="Étape 3 · Photogrammétrie" data-kind="map" data-anim="1">
+    <style>
+      #c24 .fstep-body{grid-template-columns:1fr 2fr;gap:34px}
+      #c24 .scene3d{margin:0;display:flex;flex-direction:column;gap:8px;height:100%;min-height:0;align-self:stretch}
+      #c24 .scene3d .pile3d{position:relative;flex:1;min-height:0}
+      #c24 .scene3d .pile3d > img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+      #c24 .scene3d .mapwrap{position:absolute;inset:0;background:#fff}
+      #c24 .scene3d .mapwrap:not(.on){pointer-events:none}
+      #c24 .scene3d figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+      #c24 .scene3d .cap2{display:none}
+      #c24 .scene3d:has(.mapwrap.on) .cap1{display:none}
+      #c24 .scene3d:has(.mapwrap.on) .cap2{display:block}
+    </style>
+    <div class="ft"><div><h1>Étape 3 · Reconstruire le nuage de points</h1><div class="fsub">3.2 — Façades · étape 3 sur 5</div></div></div>
+    <div class="fr-body" style="display:flex;flex-direction:column;gap:22px">
+      <div class="ftrack"><span class="ft-e done"><b>1</b>Panoramax</span><i></i><span class="ft-e done"><b>2</b>Dépliage</span><i></i><span class="ft-e on"><b>3</b>Photogrammétrie</span><i></i><span class="ft-e "><b>4</b>Recalage</span><i></i><span class="ft-e "><b>5</b>Ortho-façades</span></div>
+      <div class="fstep-body">
+        <div class="col">
+          <p style="margin:0"><b>RealityScan</b>, piloté en ligne de commande, traite chaque tuile par script : alignement, reconstruction, export d'un nuage colorisé.</p>
+          <ul class="it">
+            <li class="small"><b>Trajectoire comme a priori</b> : position contrainte, orientation souple pour absorber les erreurs GNSS en rue étroite.</li>
+            <li class="small"><b>Alignement</b> à pleine résolution, avec un modèle de distorsion adapté aux vues virtuelles.</li>
+            <li class="small"><b>Consolidation</b> des tuiles en un bloc unique, grâce à leur recouvrement.</li>
+          </ul>
+          <div class="kline">
+            <div><b>237 M</b>points dans le nuage brut</div>
+            <div><b>≈ 80 000</b>vues planes alignées</div>
+          </div>
+        </div>
+        <!-- capture RealityScan d'abord, puis au clic suivant le nuage interactif la recouvre -->
+        <figure class="scene3d">
+          <div class="pile3d">
+            <img src="assets/PFE_PRESENTATION_40.png" alt="Projet photogrammétrique dans RealityScan">
+            <!-- ══ SCÈNE 3D : remplacer les deux liens ci-dessous ══ -->
+            <div class="mapwrap frag"
+                 data-embed="https://potree-q1us.onrender.com/INSA/PFE_1.html"
+                 data-link="https://potree-q1us.onrender.com/INSA/PFE_1.html"
+                 data-label="Nuage photogrammétrique de la presqu'île">
+              <div class="mapfall">
+                <h3>Nuage de points interactif</h3>
+                <p>Collez le lien d'intégration dans l'attribut <code>data-embed</code> pour l'afficher ici.</p>
+                <a href="#" target="_blank" rel="noopener">Ouvrir dans un onglet</a>
+              </div>
+            </div>
+          </div>
+          <figcaption class="cap1">Projet photogrammétrique de la presqu'île dans RealityScan.</figcaption>
+          <figcaption class="cap2">Nuage photogrammétrique de la presqu'île, consultable en ligne (Potree).</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 24 · Étape 4 · Recalage sur les référentiels LiDAR
+       partie : texturage   |   type : contenu   |   ancre : #c25
+       IFRAME : coller le lien d'intégration dans data-embed (et data-link)
+       data-kind="map" = l'iframe est chargée à l'arrivée sur le cadre
+       clics : 1) les trois corrections  2) contrôle qualité + limite  3) nuage recalé
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c25" class="slide" data-sec="3" data-title="Étape 4 · Recalage" data-kind="map">
+    <style>
+      #c25 .fstep-body{grid-template-columns:1fr 1.55fr;gap:34px}
+      #c25 .col{gap:14px}
+      #c25 .col > p{font-size:16px;line-height:1.5}
+      #c25 .flow{gap:10px}
+      #c25 .flow h3{font-size:16px;margin-bottom:1px}
+      #c25 .flow p{font-size:13.5px;line-height:1.4}
+      #c25 table.bt{font-size:14px;margin:0}
+      #c25 table.bt td,#c25 table.bt th{padding-top:4px;padding-bottom:4px}
+      #c25 .block.alert .bh{padding:6px 14px;font-size:14px}
+      #c25 .block.alert .bb{padding:8px 14px}
+      #c25 .scene3d{margin:0;display:flex;flex-direction:column;gap:8px;height:100%;min-height:0;align-self:stretch}
+      #c25 .scene3d .mapwrap{flex:1;min-height:0}
+      #c25 .scene3d figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+    </style>
+    <div class="ft"><div><h1>Étape 4 · Recaler le nuage sur le LiDAR</h1><div class="fsub">3.2 — Façades · étape 4 sur 5</div></div></div>
+    <div class="fr-body" style="display:flex;flex-direction:column;gap:22px">
+      <div class="ftrack"><span class="ft-e done"><b>1</b>Panoramax</span><i></i><span class="ft-e done"><b>2</b>Dépliage</span><i></i><span class="ft-e done"><b>3</b>Photogrammétrie</span><i></i><span class="ft-e on"><b>4</b>Recalage</span><i></i><span class="ft-e "><b>5</b>Ortho-façades</span></div>
+      <div class="fstep-body">
+        <div class="col">
+          <p style="margin:0">Le nuage fusionné dérive le long du parcours et contient des points aberrants (reflets, ambiguïtés). Le <b>MNT</b> et le <b>multipatch</b> servent de canevas rigide.</p>
+          <div class="flow">
+            <div class="fstep"><span class="fi">1</span><div><h3>Calage altimétrique</h3><p style="margin:0">Écarts au MNT filtrés par MADN, leur médiane donne la translation verticale.</p></div></div>
+            <div class="fstep"><span class="fi">2</span><div><h3>Recalage des façades</h3><p style="margin:0">ICP point-plan pondéré (IRLS) : les points loin des murs théoriques perdent leur poids.</p></div></div>
+            <div class="fstep"><span class="fi">3</span><div><h3>Dérives locales</h3><p style="margin:0">Corrections par mailles, lissées par pondération gaussienne.</p></div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <table class="bt">
+              <thead><tr><th>Contrôle qualité</th><th class="n">Avant</th><th class="n">Après</th></tr></thead>
+              <tbody>
+                <tr><td>Planimétrie — écart-type</td><td class="n">1,15 m</td><td class="n hi">0,53 m</td></tr>
+                <tr><td>Altimétrie — biais</td><td class="n">−9,28 m</td><td class="n hi">0,94 m</td></tr>
+                <tr><td>Altimétrie — écart-type</td><td class="n">6,30 m</td><td class="n hi">2,92 m</td></tr>
+              </tbody>
+            </table>
+            <div class="block alert">
+              <div class="bh">Limite résiduelle</div>
+              <div class="bb"><p class="small" style="margin:0;color:var(--ink)">Dispersion réduite de 54 %, mais l'altimétrie reste imparfaite : par endroits, les textures se décalent verticalement.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- ══ SCÈNE 3D : remplacer les deux liens ci-dessous ══ -->
+        <figure class="scene3d">
+          <div class="mapwrap"
+               data-embed="https://potree-q1us.onrender.com/INSA/PFE_2.html"
+               data-link="https://potree-q1us.onrender.com/INSA/PFE_2.html"
+               data-label="Nuage recalé sur le LiDAR">
+            <div class="mapfall">
+              <h3>Nuage recalé interactif</h3>
+              <p>Collez le lien d'intégration dans l'attribut <code>data-embed</code> pour l'afficher ici.</p>
+              <a href="#" target="_blank" rel="noopener">Ouvrir dans un onglet</a>
+            </div>
+          </div>
+          <figcaption>Nuage photogrammétrique recalé sur le MNT et le multipatch LiDAR.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 25 · Étape 5 · Rastérisation des ortho-façades
+       partie : texturage   |   type : contenu   |   ancre : #c26
+       source : rapport §3.2.2 « Repère et rastérisation », figure 3.13
+       clics : 1) étapes (a)→(f) + figure   2) façades sans point
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c26" class="slide" data-sec="3" data-title="Étape 5 · Ortho-façades">
+    <style>
+      #c26 .fstep-body{grid-template-columns:1fr 1.6fr;gap:30px}
+      #c26 .etp{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+      #c26 .etp li{display:grid;grid-template-columns:46px 1fr;gap:10px;align-items:baseline;font-size:14px;line-height:1.42;color:var(--muted)}
+      #c26 .etp li b{color:var(--ink)}
+      #c26 .etp .lt{font-family:var(--f-serif);font-weight:600;font-size:14px;color:var(--insa);white-space:nowrap}
+      #c26 .fstep-body .vue img{max-height:none}
+    </style>
+    <div class="ft"><div><h1>Étape 5 · Produire les ortho-façades</h1><div class="fsub">3.2 — Façades · étape 5 sur 5</div></div></div>
+    <div class="fr-body" style="display:flex;flex-direction:column;gap:22px">
+      <div class="ftrack"><span class="ft-e done"><b>1</b>Panoramax</span><i></i><span class="ft-e done"><b>2</b>Dépliage</span><i></i><span class="ft-e done"><b>3</b>Photogrammétrie</span><i></i><span class="ft-e done"><b>4</b>Recalage</span><i></i><span class="ft-e on"><b>5</b>Ortho-façades</span></div>
+      <div class="fstep-body">
+        <div class="col">
+          <p style="margin:0">Des dizaines de millions de points ne s'affichent pas en temps réel : la couleur du nuage est transférée dans une <b>image par façade</b>, calculée dans le repère local du mur.</p>
+          <ul class="etp">
+            <li><span class="lt">(a)</span><span><b>Projection</b> des points sur le plan du mur, dans une <b>tranche utile de 50 cm</b> (type Z-buffer).</span></li>
+            <li><span class="lt">(b)</span><span><b>Splatting</b> : chaque point devient un disque coloré dont le rayon suit la densité locale. La résolution s'adapte au nuage (ici 2,1 cm par pixel).</span></li>
+            <li><span class="lt">(c)</span><span><b>Texels sans mesure</b> repérés (18 % ici) : masquages par les véhicules, le mobilier ou les erreurs de reconstruction.</span></li>
+            <li><span class="lt">(d–e)</span><span><b>Comblement</b> des trous, puis <b>filtre médian 5 × 5</b>.</span></li>
+            <li><span class="lt">(f)</span><span>Les <b>vrais texels sont restaurés</b> par-dessus : le lissage ne touche que les zones comblées.</span></li>
+          </ul>
+        </div>
+        <figure class="vue">
+          <div class="im"><img src="assets/PFE_PRESENTATION_41.png" alt="Étapes de texturation d'une façade"></div>
+          <figcaption>Texturation d'une façade par traitement raster, de la projection du nuage à l'image finale (rapport, figure 3.13).</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 26 · Bilan du texturage
+       partie : texturage   |   type : contenu   |   ancre : #c27
+       mise en page : bandeau de chiffres + limites, puis scène 3D pleine largeur
+       IFRAME : coller le lien d'intégration dans data-embed (et data-link)
+       data-kind="map" = l'iframe est chargée à l'arrivée sur le cadre
+       clics : 1) origine de la couverture partielle
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c27" class="slide" data-sec="3" data-title="Résultats du texturage" data-kind="map">
+    <style>
+      #c27 .fr-body{display:flex;flex-direction:column;gap:16px}
+      #c27 .bandeau{display:grid;grid-template-columns:auto auto 1fr;gap:34px;align-items:center}
+      #c27 .kv{display:flex;align-items:baseline;gap:12px}
+      #c27 .kv b{font-family:var(--f-serif);font-size:40px;font-weight:600;color:var(--insa-d);line-height:1}
+      #c27 .kv span{font-size:14px;line-height:1.35;color:var(--muted);max-width:170px}
+      #c27 .lim{border-left:4px solid var(--insa-dd);background:var(--insa-t);padding:10px 16px}
+      #c27 .lim h3{font-size:14.5px;margin:0 0 6px;color:var(--insa-dd)}
+      #c27 .lim ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+      #c27 .lim li{font-size:13px;line-height:1.4;color:var(--ink);padding-left:12px;position:relative}
+      #c27 .lim li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;background:var(--insa)}
+      #c27 .scene3d{margin:0;flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+      #c27 .scene3d .mapwrap{flex:1;min-height:0}
+      #c27 .scene3d figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+    </style>
+    <div class="ft"><div><h1>Résultats du texturage</h1><div class="fsub">3.3 — Résultats</div></div>
+      <div class="fright">La limite n'est pas algorithmique : elle tient à la géométrie d'acquisition et à la source.</div></div>
+    <div class="fr-body">
+      <div class="bandeau">
+        <div class="kv"><b>98,6 %</b><span>de la surface de toiture correctement texturée</span></div>
+        <div class="kv"><b>≈ 45 %</b><span>des façades texturées par l'imagerie de rue</span></div>
+        <div class="lim">
+          <h3>Origine de la couverture partielle des façades</h3>
+          <ul>
+            <li>Cœurs d'îlots invisibles depuis toute voie publique.</li>
+            <li>En rue étroite, GNSS dégradé et base trop courte entre panoramas.</li>
+            <li>Couverture Panoramax contributive, donc inégale selon les quartiers.</li>
+          </ul>
+        </div>
+      </div>
+      <!-- ══ SCÈNE 3D : remplacer les deux liens ci-dessous ══ -->
+      <figure class="scene3d">
+        <div class="mapwrap"
+             data-embed="https://unistra.maps.arcgis.com/apps/instant/3dviewer/index.html?appid=fa088e90a7644dca827257559218a52c"
+             data-link="https://unistra.maps.arcgis.com/apps/instant/3dviewer/index.html?appid=fa088e90a7644dca827257559218a52c"
+             data-label="Maquette texturée de la presqu'île">
+          <div class="mapfall">
+            <h3>Maquette texturée interactive</h3>
+            <p>Collez le lien d'intégration dans l'attribut <code>data-embed</code> pour l'afficher ici.</p>
+            <a href="#" target="_blank" rel="noopener">Ouvrir dans un onglet</a>
+          </div>
+        </div>
+        <figcaption>Maquette texturée de la presqu'île strasbourgeoise : toitures par BD-ORTHO, façades par Panoramax.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 27 · Partie 4
+       partie : rendu   |   type : chapter   |   ancre : #c26
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c28" class="slide" data-sec="4" data-title="Partie 4" data-kind="chapter">
+    <div class="chap">
+      <div class="cpart">Quatrième partie</div>
+      <h1>Intégration dans Unreal Engine 5</h1>
+      <div class="crule"></div>
+      <div class="cm">
+        <div><b>.slpk</b>paquet de scène local</div>
+        <div><b>SDK Esri</b>ArcGIS for Unreal Engine</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 28 · Export et intégration
+       partie : rendu   |   type : contenu   |   ancre : #c29
+       mise en page : chaîne d'export animée en haut (se joue à l'arrivée),
+       capture Unreal Engine au centre, quatre atouts qui arrivent des côtés
+       clics : 1) LWC  2) Nanite  3) Lumen  4) fond BD-ORTHO
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c29" class="slide" data-sec="4" data-title="Export et intégration">
+    <style>
+      #c29.active .flux *{animation:none !important}
+      #c29 .fr-body{display:flex;flex-direction:column;gap:18px}
+      /* ── chaîne d'export ── */
+      #c29 .flux{display:flex;align-items:center;gap:0}
+      #c29 .flux .n{display:flex;align-items:center;gap:12px;padding:8px 16px 8px 12px;border:1px solid var(--rule);background:#fff;white-space:nowrap}
+      #c29 .flux .n img{height:44px;width:auto;max-width:64px;object-fit:contain}
+      #c29 .flux .n b{display:block;font-size:14.5px;color:var(--ink)}
+      #c29 .flux .n small{display:block;font-size:12px;color:var(--muted)}
+      #c29 .flux i{flex:1;height:2px;background:var(--insa);min-width:24px;position:relative;transform-origin:0 50%}
+      #c29 .flux i::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--insa);border-right:0}
+      #c29 .flux .note{margin-left:22px;font-size:13.5px;line-height:1.35;color:var(--muted);max-width:230px;white-space:normal}
+      #c29 .flux .note b{color:var(--insa-d)}
+      #c29.active .flux .n,#c29.active .flux .note{animation:c28on .5s var(--ease) both}
+      #c29.active .flux i{animation:c28trait .4s var(--ease) both}
+      #c29.active .flux > :nth-child(1){animation-delay:.10s}
+      #c29.active .flux > :nth-child(2){animation-delay:.25s}
+      #c29.active .flux > :nth-child(3){animation-delay:.35s}
+      #c29.active .flux > :nth-child(4){animation-delay:.50s}
+      #c29.active .flux > :nth-child(5){animation-delay:.60s}
+      #c29.active .flux > :nth-child(6){animation-delay:.75s}
+      #c29.active .flux > :nth-child(7){animation-delay:.85s}
+      #c29.active .flux > :nth-child(8){animation-delay:1.05s}
+      @keyframes c28on{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+      @keyframes c28trait{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+      /* ── scène centrale ── */
+      #c29 .scene{flex:1;min-height:0;display:grid;grid-template-columns:225px 1fr 225px;gap:24px;align-items:center}
+      #c29 .cote{display:flex;flex-direction:column;gap:22px}
+      #c29 .atout{position:relative;background:#fff;border:1px solid var(--rule);border-top:3px solid var(--insa);padding:12px 14px}
+      #c29 .atout h3{font-size:16px;margin:0 0 5px}
+      #c29 .atout p{font-size:13.5px;line-height:1.42;color:var(--muted);margin:0}
+      #c29 .atout::after{content:"";position:absolute;top:50%;width:24px;height:2px;background:var(--insa);transform:scaleX(0);transition:transform .45s var(--ease) .25s}
+      #c29 .g .atout::after{left:100%;transform-origin:0 50%}
+      #c29 .d .atout::after{right:100%;transform-origin:100% 50%}
+      #c29 .atout.on::after{transform:scaleX(1)}
+      #c29 .g .atout.frag{transform:translateX(-40px)}
+      #c29 .d .atout.frag{transform:translateX(40px)}
+      #c29 .cote .atout.frag.on{transform:none}
+      #c29 .capture{margin:0;display:flex;flex-direction:column;gap:6px;min-height:0;height:100%;justify-content:center}
+      #c29 .capture .cadre{position:relative;min-height:0;box-shadow:0 14px 40px rgba(0,0,0,.18)}
+      #c29 .capture img{display:block;width:100%;height:auto;max-height:640px;object-fit:contain;background:#111}
+      #c29 .capture .ue{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.62);color:#fff;font-size:12.5px;padding:4px 10px;letter-spacing:.03em}
+      #c29 .capture figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+      #c29 .refs{margin:0;padding:0}
+    </style>
+    <div class="ft"><div><h1>Export et intégration</h1><div class="fsub">4.1 — Interopérabilité</div></div></div>
+    <div class="fr-body">
+
+      <!-- chaîne d'export : s'anime seule à l'arrivée sur le cadre -->
+      <div class="flux">
+        <div class="n"><img src="assets/PFE_PRESENTATION_9.png" alt=""><div><b>ArcGIS Pro</b><small>maquette multipatch texturée</small></div></div>
+        <i></i>
+        <div class="n"><div><b>.slpk</b><small>paquet de scène local</small></div></div>
+        <i></i>
+        <div class="n"><img src="assets/PFE_PRESENTATION_10.png" alt=""><div><b>ArcGIS Maps SDK</b><small>for Unreal Engine</small></div></div>
+        <i></i>
+        <div class="n"><img src="assets/PFE_PRESENTATION_12.png" alt=""><div><b>Unreal Engine 5</b><small>rendu temps réel</small></div></div>
+        <div class="note"><b>Aucune plateforme cloud</b> : la donnée reste interne, du LiDAR jusqu'au rendu.</div>
+      </div>
+
+      <div class="scene">
+        <div class="cote g">
+          <div class="atout">
+            <h3>Large World Coordinates</h3>
+            <p>Coordonnées Lambert-93 conservées</p>
+          </div>
+          <div class="atout">
+            <h3>Nanite</h3>
+            <p>Géométrie massive, sans simplification</p>
+          </div>
+        </div>
+
+        <figure class="capture">
+          <div class="cadre">
+            <img src="assets/PFE_PRESENTATION_42.png" alt="Maquette dans Unreal Engine 5">
+          </div>
+          <figcaption>Maquette intégrée dans Unreal Engine : géométries et textures générées dans le SIG à partir d'une simple emprise au sol.</figcaption>
+        </figure>
+
+        <div class="cote d">
+          <div class="atout">
+            <h3>Lumen</h3>
+            <p>Ombres selon l'heure et la saison</p>
+          </div>
+          <div class="atout">
+            <h3>Fond BD-ORTHO</h3>
+            <p>Prolonge la scène au-delà de l'emprise</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 29 · Conclusion et perspectives
+       partie : bilan   |   type : contenu   |   ancre : #c30
+       source : rapport, chapitres 5 (limites et discussions) et 6 (conclusion)
+       mise en page : bilan chiffré en bandeau, puis une colonne par maillon :
+       limite en haut → perspective en dessous
+       clics : 1) segmentation  2) texturage  3) rendu (limite → perspective)  4) ouverture
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c30" class="slide" data-sec="5" data-title="Conclusion et perspectives" data-noside="1" data-foot="Bilan et perspectives">
+    <style>
+      #c30 .fr-body{display:flex;flex-direction:column;gap:20px}
+      #c30 .lead{margin:0;font-family:var(--f-sans);font-size:18px;line-height:1.5;color:var(--ink);max-width:none}
+      #c30 .lead b{color:var(--insa-d)}
+      /* bandeau de résultats */
+      #c30 .res{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+      #c30 .res div{padding:14px 18px;font-size:15px;line-height:1.35;color:var(--muted)}
+      #c30 .res div + div{border-left:1px solid var(--rule)}
+      #c30 .res b{display:block;font-family:var(--f-serif);font-size:34px;font-weight:600;color:var(--insa-d);line-height:1.15;margin-bottom:2px;white-space:nowrap}
+      #c30 .res b small{font-size:15px;color:var(--muted);font-weight:400}
+      /* matrice limite → perspective */
+      #c30 .mat{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:auto auto auto auto;align-content:center;column-gap:40px}
+      #c30 .tete{display:flex;align-items:baseline;gap:10px;padding-bottom:8px;border-bottom:2px solid var(--insa);margin-bottom:10px}
+      #c30 .tete span{font-family:var(--f-serif);font-size:15px;font-weight:600;color:var(--insa)}
+      #c30 .tete h3{margin:0;font-size:24px}
+      #c30 .lim,#c30 .per{padding:20px 24px}
+      #c30 .lim{background:var(--insa-t);border-left:4px solid var(--insa-dd)}
+      #c30 .per{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--insa)}
+      #c30 .etq{display:block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+      #c30 .lim .etq{color:var(--insa-dd)}
+      #c30 .per .etq{color:var(--insa)}
+      #c30 .lim ul,#c30 .per ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+      #c30 .lim li,#c30 .per li{font-size:19px;line-height:1.45;color:var(--ink);padding-left:13px;position:relative}
+      #c30 .lim li::before,#c30 .per li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;background:var(--insa)}
+      #c30 .fl{display:flex;justify-content:center;align-items:center;height:30px;color:var(--insa);font-size:18px;line-height:1}
+      #c30 .fin{display:grid;grid-template-columns:1fr auto;gap:30px;align-items:center;border-top:1px solid var(--rule);padding-top:12px}
+      #c30 .fin p{margin:0}
+      #c30 .fin .ouv{font-family:var(--f-serif);font-size:18px;line-height:1.45;color:var(--insa-d)}
+      #c30 .fin .ote{font-size:13px;color:var(--muted);max-width:420px;text-align:right}
+    </style>
+    <div class="ft"><div><h1>Conclusion, limites et perspectives</h1><div class="fsub">Bilan</div></div></div>
+    <div class="fr-body">
+
+      <p class="lead">Une chaîne <b>automatisée</b>, fondée sur des données <b>ouvertes et souveraines</b>, <b>reproductible à l'échelle nationale</b>.</p>
+
+      <div class="res">
+        <div><b>21,2 <small>cm</small></b>de précision moyenne des toitures LoD2</div>
+        <div><b>9,28 → 0,94 <small>m</small></b>de biais altimétrique du nuage de rue</div>
+        <div><b>98,6 %</b>de la surface de toiture bien texturée</div>
+        <div><b>≈ 45 %</b>des façades texturées par Panoramax</div>
+      </div>
+
+      <div class="mat">
+        <!-- têtes de colonnes -->
+        <div class="tete"><h3>Texturage</h3></div>
+        <div class="tete"><h3>Rendu temps réel</h3></div>
+
+        <!-- limites -->
+        <div class="lim"><span class="etq">Limites</span><ul>
+          <li>Panoramax ne couvre pas tout le territoire, centres d'îlots inaccessibles, GNSS dégradé en rue étroite.</li>
+        </ul></div>
+        <div class="lim"><span class="etq">Limites</span><ul>
+          <li>Interopérabilité validée, mais livrable statique : l'application interactive n'a pas été menée à son terme.</li>
+        </ul></div>
+
+        <!-- flèches -->
+        <div class="fl">▼</div>
+        <div class="fl">▼</div>
+
+        <!-- perspectives -->
+        <div class="per"><span class="etq">Perspectives</span><ul>
+          <li><b>Imagerie aérienne oblique</b> : toitures et élévations depuis une source unique.</li>
+          <li>Textures <b>génératives</b> (inpainting) ou <b>procédurales</b> (règles CGA) pour les façades sans donnée, <b>NeRF / 3DGS</b> en zone urbaine dense.</li>
+        </ul></div>
+        <div class="per"><span class="etq">Perspectives</span><ul>
+          <li>Application <b>Unreal Engine 5</b> type <em>serious game</em> : navigation libre, ensoleillement dynamique (Lumen), insertion de projets comme des parcs photovoltaïques.</li>
+        </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE 30 · Merci
+       partie : bilan   |   type : cover   |   ancre : #c31
+       reprend la page de titre (logos, mise en page, animation de
+       reconstruction). data-kind="cover" relance l'animation de cover.js ;
+       le canevas #recon est déplacé ici à l'arrivée, puis rendu au cadre 01.
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c31" class="slide bleed" data-sec="5" data-title="Merci" data-noside="1" data-foot="Bilan et perspectives" data-kind="cover">
+    <div class="tp">
+      <div class="logos">
+        <div class="lgroup">
+        <span class="logo lg" data-name="OTE Ingénierie" data-sub="Groupe OTE">
+          <img src="assets/LOGO_OTE_ING.png" alt="OTE Ingénierie">
+        </span>
+        </div>
+        <div class="lgroup">
+          <span class="logo" style="height:42px" data-name="INSA Strasbourg" data-sub="Institut national des sciences appliquées">
+            <img style="max-height:42px" src="assets/LOGO_INSA.jpg" alt="INSA Strasbourg"></span>
+          <span class="logo" style="height:42px" data-name="Télécom Physique Strasbourg" data-sub="Université de Strasbourg">
+            <img style="max-height:42px" src="assets/LOGO_TPS.png" alt="Télécom Physique Strasbourg"></span>
+        </div>
+      </div>
+
+      <div class="tmain">
+        <div class="tcol">
+          <div class="ttype">SIG 2026 · Conférence francophone Esri</div>
+          <h1 style="font-size:52px;line-height:1.15">Merci de votre attention</h1>
+          <p class="tsub">Nous restons à votre disposition pour les questions.</p>
+          <div class="tsep"></div>
+          <div class="tpeople">
+            <div><b>Stéphane Moisy</b>Expert Cartographie et Administration S.I.G. · Chef de pôle</div>
+            <div><b>Baptiste Mischler</b>Ingénieur Géomètre Topographe et Géomaticien</div>
+          </div>
+        </div>
+
+        <!-- le canevas de la page de titre vient se loger ici (voir script) -->
+        <div class="tviz"></div>
+      </div>
+
+      <div class="tfoot">
+        <span>SIG 2026, le Géo événement — Esri France</span>
+        <span>Docks de Paris, 7 et 8 octobre 2026</span>
+      </div>
+    </div>
+
+    <script>
+    /* L'animation (js/cover.js) dessine dans un seul canevas, #recon.
+       On le déplace dans le cadre affiché : ici pour le merci, dans le
+       cadre 01 sinon. Ce script s'exécute avant cover.js à chaque entrée. */
+    (function () {
+      var accueil = null;
+      document.addEventListener('deck:enter', function (e) {
+        var cv = document.getElementById('recon');
+        if (!cv) return;
+        if (!accueil) accueil = cv.parentNode;
+        var cible = e.detail.slide.id === 'c31'
+          ? e.detail.slide.querySelector('.tviz')
+          : (e.detail.kind === 'cover' ? accueil : null);
+        if (cible && cv.parentNode !== cible) cible.appendChild(cv);
+      });
+    })();
+    </script>
+  </section>
+
+<!-- ═════════════════════════════════════════════════════════════════════
+       ANNEXES — CADRES CACHÉS
+       data-hidden="1" : le cadre est sorti du déroulé normal. On n'y arrive
+       que par le plan (touche S), rubrique « Annexes ». Depuis « Merci »,
+       avancer ne mène plus aux annexes ; le bouton « Retour » ramène au
+       dernier cadre du déroulé consulté. Logique : script « cadres cachés »
+       en bas de fichier, après deck.js.
+       ═════════════════════════════════════════════════════════════════════ -->
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A1 · Limites du référentiel vectoriel
+       partie : segmentation   |   type : contenu   |   ancre : #c10
+       mise en page : texte à gauche, figure à droite à sa taille réelle
+       (le cadre épouse l'image), les deux colonnes centrées verticalement
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c10" class="slide" data-sec="1" data-title="Annexe · Limites du référentiel vectoriel" data-hidden="1" data-noside="1" data-foot="Annexe">
+    <div class="ft"><div><h1>Limites du référentiel vectoriel</h1><div class="fsub">1.1 — Position du problème</div></div></div>
+    <div class="fr-body">
+      <div class="split" style="grid-template-columns:1fr 1.15fr;align-items:center;gap:44px">
+
+        <div class="stack" style="gap:26px">
+          <ul class="it">
+            <li>La BD-TOPO est mise à jour plus fréquemment que les campagnes LiDAR.</li>
+            <li class="frag">Les géométries ne coïncident pas toujours.</li>
+            <li class="frag">Reconstruire sur une emprise erronée revient à figer l'erreur dans la maquette, sans moyen de la corriger ensuite.</li>
+          </ul>
+        </div>
+
+        <figure style="margin:0">
+          <img src="assets/PFE_PRESENTATION_17.png" alt="Décalages LiDAR / BD-TOPO" style="width:100%;height:auto;display:block;border:1px solid var(--rule)">
+          <figcaption style="margin-top:8px;font-size:12.5px;color:var(--dim);font-style:italic;line-height:1.45"><b style="font-style:normal;color:var(--ink)">Fig. 2</b> — Décalages entre le nuage LiDAR-HD (rouge) et les emprises de la BD-TOPO (vert).</figcaption>
+        </figure>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A2 · Choix du modèle
+       partie : segmentation   |   type : contenu (animé)   |   ancre : #c13
+       source : rapport §4.1.2, tableaux 4.2, 4.3 et 4.4
+       mise en page : deux « duels » à barres animées (A, B) à gauche, courbe
+       de capacité qui se trace (C) à droite, configuration retenue en bas.
+       Les animations se déclenchent quand chaque bloc apparaît.
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c13" class="slide" data-sec="1" data-title="Annexe · Choix du modèle" data-hidden="1" data-noside="1" data-foot="Annexe">
+    <style>
+      #c13 .grid{display:grid;grid-template-columns:1fr 1.45fr;gap:26px;align-items:stretch}
+      #c13 .card{border:1px solid var(--rule);background:#fff;padding:16px 20px 14px;display:flex;flex-direction:column}
+      #c13 .card .tag{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+      #c13 .card .tag b{font-family:var(--f-serif);font-size:22px;color:var(--insa)}
+      #c13 .card .tag span{font-family:var(--f-serif);font-size:18px;font-weight:600;color:var(--ink)}
+      #c13 .card .tag em{margin-left:auto;font-style:normal;font-size:12px;color:var(--dim)}
+      #c13 .duel{display:grid;grid-template-columns:118px 1fr 52px;align-items:center;gap:6px 12px}
+      #c13 .duel .lab{font-size:14px;color:var(--ink)}
+      #c13 .duel .bar{height:22px;background:#F2F2EE;position:relative}
+      #c13 .duel .bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--slate);transition:width 1.1s cubic-bezier(.2,.7,.2,1) .15s}
+      #c13 .duel .win i{background:var(--insa)}
+      #c13 .duel .val{font-family:var(--f-serif);font-size:17px;font-weight:600;text-align:right;color:var(--muted)}
+      #c13 .duel .win + .val{color:var(--insa-d)}
+      #c13 .frag.on .duel .bar i{width:var(--w)}
+      #c13 .note{margin-top:10px;font-size:13.5px;color:var(--muted);line-height:1.45}
+      #c13 .axe{font-size:11px;color:var(--dim);text-align:right;margin-top:4px}
+      /* courbe */
+      #c13 svg text{font-family:var(--f-sans);font-size:12px;fill:var(--muted)}
+      #c13 .ln{fill:none;stroke:var(--insa);stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease .2s}
+      #c13 .frag.on .ln{stroke-dashoffset:0}
+      #c13 .pt{fill:#fff;stroke:var(--insa);stroke-width:2;opacity:0;transition:opacity .4s}
+      #c13 .pt.sel{fill:var(--insa)}
+      #c13 .frag.on .pt{opacity:1}
+      #c13 .frag.on .p1{transition-delay:.3s}  #c13 .frag.on .p2{transition-delay:.6s}
+      #c13 .frag.on .p3{transition-delay:1s}   #c13 .frag.on .p4{transition-delay:1.7s}
+      #c13 .an{opacity:0;transition:opacity .5s}
+      #c13 .frag.on .an{opacity:1;transition-delay:1.9s}
+      #c13 .an text{font-size:12.5px}
+      #c13 .ml text.m{font-family:var(--f-serif);font-size:15px;font-weight:600;fill:var(--ink)}
+      #c13 .ml text.m.sel{fill:var(--insa-d)}
+      /* configuration retenue */
+      #c13 .ret{display:grid;grid-template-columns:auto repeat(3,1fr);align-items:center;gap:32px;background:var(--insa-t);border-left:4px solid var(--insa);padding:16px 26px}
+      #c13 .ret .t{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--insa)}
+      #c13 .ret .t b{display:block;font-family:var(--f-serif);font-size:22px;letter-spacing:0;text-transform:none;color:var(--ink);margin-top:4px}
+      #c13 .ret .v{font-family:var(--f-serif);font-size:32px;font-weight:600;color:var(--insa-d);line-height:1}
+      #c13 .ret .l{font-size:13px;color:var(--muted);margin-top:5px}
+    </style>
+
+    <div class="ft"><div><h1>Choix du modèle</h1><div class="fsub">1.4 — Expérimentations</div></div>
+      <div class="fright">Essais conduits sur 10 % du jeu de données final, 300 époques chacun.</div></div>
+
+    <div class="fr-body" style="display:flex;flex-direction:column;justify-content:center;gap:22px">
+      <div class="grid">
+
+        <!-- colonne gauche : les deux duels -->
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="card frag">
+            <div class="tag"><b>A</b><span>Initialisation</span><em>YOLOv8 Small</em></div>
+            <div class="duel">
+              <div class="lab">Transfert COCO<sup>*</sup></div><div class="bar win"><i style="--w:66%"></i></div><div class="val">0,812</div>
+              <div class="lab">Ex nihilo</div><div class="bar"><i style="--w:59%"></i></div><div class="val">0,800</div>
+            </div>
+            <div class="note">Écart non significatif : le transfert est conservé.</div>
+          </div>
+
+          <div class="card frag">
+            <div class="tag"><b>B</b><span>Architecture</span><em>version Small</em></div>
+            <div class="duel">
+              <div class="lab">YOLOv8</div><div class="bar win"><i style="--w:66%"></i></div><div class="val">0,812</div>
+              <div class="lab">YOLO26</div><div class="bar"><i style="--w:20%"></i></div><div class="val">0,735</div>
+            </div>
+            <div class="note">YOLO26 plafonne dès la 58<sup>e</sup> époque, pour 93 h de calcul contre 56 h.</div>
+            <div class="axe">précision maximale · axe à partir de 0,70</div>
+          </div>
+        </div>
+
+        <!-- colonne droite : la courbe de capacité -->
+        <div class="card frag">
+          <div class="tag"><b>C</b><span>Capacité du réseau</span><em>famille YOLOv8</em></div>
+          <svg viewBox="0 0 640 330" role="img" aria-label="Précision maximale selon la durée d'entraînement">
+            <!-- repère : x = 40 → 200 h, y = 0,75 → 0,88 -->
+            <g stroke="var(--rule)" stroke-width="1">
+              <line x1="60" y1="260" x2="610" y2="260"/><line x1="60" y1="202" x2="610" y2="202"/>
+              <line x1="60" y1="145" x2="610" y2="145"/><line x1="60" y1="87" x2="610" y2="87"/>
+            </g>
+            <line x1="60" y1="290" x2="610" y2="290" stroke="var(--ink)"/>
+            <line x1="60" y1="30" x2="60" y2="290" stroke="var(--ink)"/>
+            <text x="50" y="264" text-anchor="end">0,76</text><text x="50" y="206" text-anchor="end">0,79</text>
+            <text x="50" y="149" text-anchor="end">0,82</text><text x="50" y="91" text-anchor="end">0,85</text>
+            <text x="94" y="310" text-anchor="middle">50</text><text x="266" y="310" text-anchor="middle">100</text>
+            <text x="438" y="310" text-anchor="middle">150</text><text x="610" y="310" text-anchor="middle">200</text>
+            <text x="335" y="328" text-anchor="middle">durée d'entraînement (h)</text>
+
+            <!-- courbe qui se trace : Nano → Small → Medium → Large -->
+            <path class="ln" pathLength="1" d="M100 249 L114 160 L208 97 L565 60"/>
+
+            <!-- gains marginaux -->
+            <g class="an">
+              <text x="222" y="146" style="fill:var(--insa-d);font-weight:400">+3,3 pts · +27 h</text>
+              <text x="386" y="64" text-anchor="middle" style="font-weight:400">+1,9 pt · +104 h</text>
+            </g>
+
+            <circle class="pt p1" cx="100" cy="249" r="5"/>
+            <circle class="pt p2" cx="114" cy="160" r="5"/>
+            <circle class="pt sel p3" cx="208" cy="97" r="8"/>
+            <circle class="pt p4" cx="565" cy="60" r="5"/>
+
+            <g class="ml an" style="transition-delay:0s">
+              <text class="m" x="112" y="272">Nano · 0,766</text>
+              <text class="m" x="126" y="178">Small · 0,812</text>
+              <text class="m sel" x="222" y="124">Medium · 0,845</text>
+              <text class="m" x="565" y="40" text-anchor="middle">Large · 0,864</text>
+            </g>
+          </svg>
+          <div class="note" style="margin-top:4px">Rendement décroissant : au-delà de Medium, un point de précision coûte près de sept fois plus de calcul (55 h contre 8 h).</div>
+        </div>
+      </div>
+
+      <!-- configuration retenue -->
+      <div class="ret frag">
+        <div class="t">Configuration retenue<b>YOLOv8-Medium</b></div>
+        <div><div class="v">83,5 %</div><div class="l">précision finale du modèle complet</div></div>
+        <div><div class="v">17,0 j</div><div class="l">d'entraînement sur le jeu complet</div></div>
+        <div><div class="v">RTX 5090</div><div class="l"><em>yolov8m-seg.pt</em>, pré-entraîné sur COCO<sup>*</sup></div></div>
+      </div>
+
+      <p class="small" style="margin:0;font-size:12.5px;color:var(--dim)"><sup>*</sup> COCO (<i>Common Objects in Context</i>) : base de référence en vision par ordinateur, plus de 300 000 images annotées en 80 classes d'objets du quotidien. Ses poids pré-entraînés servent de point de départ à l'apprentissage.</p>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A3 · Performances de la segmentation
+       partie : segmentation   |   type : contenu   |   ancre : #c14
+       mise en page : carte en grand sur toute la hauteur à gauche,
+       indicateurs puis limite empilés dans une colonne étroite à droite
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c14" class="slide" data-sec="1" data-title="Annexe · Performances de la segmentation" data-hidden="1" data-noside="1" data-foot="Annexe">
+    <style>
+      #c14 .lay{display:grid;grid-template-columns:1fr 350px;gap:28px;height:100%;min-height:0}
+      #c14 .map{display:flex;flex-direction:column;gap:8px;min-height:0;margin:0}
+      #c14 .map .im{flex:1;min-height:0}
+      #c14 .map img{width:100%;height:100%;object-fit:contain;object-position:left center;display:block}
+      #c14 .map figcaption{font-size:12.5px;font-style:italic;color:var(--muted);line-height:1.4}
+      #c14 .side{display:flex;flex-direction:column;justify-content:center;gap:18px;min-height:0}
+      #c14 .k4{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+      #c14 .k4 .kpi-v{font-size:28px}
+      #c14 .k4 .kpi-l{font-size:12.5px;margin-top:6px}
+    </style>
+    <div class="ft"><div><h1>Performances de la segmentation</h1><div class="fsub">1.5 — Résultats</div></div></div>
+    <div class="fr-body">
+      <div class="lay">
+
+        <figure class="map">
+          <div class="im"><img src="assets/PFE_PRESENTATION_33.png" alt="Segmentation YOLO sur la presqu'île de Strasbourg"></div>
+          <figcaption><b style="font-style:normal;color:var(--ink)">Fig. 4</b> — Emprises YOLO et BD-TOPO sur Strasbourg : les îlots mitoyens sont restitués comme une entité unique, enveloppe correcte, dénombrement erroné.</figcaption>
+        </figure>
+
+        <div class="side">
+          <div class="k4">
+            <div class="kpi"><div class="kpi-v">83,5 %</div><div class="kpi-l">précision du modèle</div></div>
+            <div class="kpi frag"><div class="kpi-v">90,3 %</div><div class="kpi-l">du territoire bien classé, bâti ou non</div></div>
+            <div class="kpi frag"><div class="kpi-v">72,8 %</div><div class="kpi-l">de la surface bâtie réelle retrouvée</div></div>
+            <div class="kpi frag"><div class="kpi-v">0,23 m</div><div class="kpi-l">écart médian entre centroïdes appariés</div></div>
+          </div>
+
+          <div class="block alert frag">
+            <div class="bh">Limite — les bâtiments mitoyens</div>
+            <div class="bb">
+              <p class="small" style="margin:0 0 8px;color:var(--ink)">Le réseau détoure l'enveloppe des îlots mais ne sépare pas deux toits accolés : le nuage ne présente aucune discontinuité entre eux.</p>
+              <ul class="it">
+                <li class="small">3 548 entités prédites contre 13 255 dans la BD-TOPO</li>
+                <li class="small">emprises trois fois plus vastes : 931 m² contre 295 m²</li>
+                <li class="small">rappel objet de 15 % sous 50 m², 31 % au-delà de 500 m²</li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="small frag" style="margin:0">Seuls les grands bâtiments isolés, entrepôts et équipements publics, sont restitués individuellement.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+      <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A4 · Annexe · Démonstration vidéo ArcGIS Pro
+       partie : annexe   |   type : vidéo (caché)   |   ancre : #c32
+       VIDÉO : coller le code d'intégration YouTube (« Partager › Intégrer »)
+       à la place de l'iframe ci-dessous. Taille gérée par le CSS.
+       La vidéo est arrêtée quand on quitte le cadre.
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c32" class="slide" data-sec="5" data-hidden="1" data-noside="1" data-foot="Annexe" data-title="Annexe · Démonstration ArcGIS Pro">
+    <style>
+      #c32 .fr-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+      #c32 .lecteur{position:relative;height:100%;max-height:720px;aspect-ratio:16/9;max-width:100%;background:#000;box-shadow:0 14px 40px rgba(0,0,0,.18)}
+      #c32 .lecteur iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+      #c32 .leg{font-size:13px;font-style:italic;color:var(--muted);margin:0;max-width:none}
+    </style>
+    <div class="ft"><div><h1>La chaîne de traitement dans ArcGIS Pro</h1><div class="fsub">Annexe A1 — démonstration vidéo · hors déroulé</div></div>
+      <div class="fright"><button class="retour" type="button">↩ Retour à la présentation</button></div></div>
+    <div class="fr-body">
+      <div class="lecteur">
+        <!-- ══ coller ici le code d'intégration YouTube ══ -->
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/83yjmP_a8qY?si=i2uZdZBAxIXhlbY1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <p class="leg">Exécution de la Python Toolbox dans ArcGIS Pro : de l'emprise de projet 2D à la maquette texturée, prête pour l'export vers Unreal Engine.</p>
+    </div>
+
+    <script>
+    /* arrête la vidéo en quittant le cadre (on recharge l'iframe) */
+    (function () {
+      var cadre = document.getElementById('c32');
+      document.addEventListener('deck:leave', function (e) {
+        if (e.detail.slide !== cadre) return;
+        var f = cadre.querySelector('.lecteur iframe');
+        if (f) f.src = f.src;
+      });
+    })();
+    </script>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A5 · Annexe · Essais YOLO en graphes
+       partie : annexe   |   type : contenu (caché)   |   ancre : #c33
+       complément de la partie 1 (Emprises / segmentation YOLO), pour le jury
+       source : rapport §3.1.2 (tableau 3.8, étalonnage matériel) et §4.1
+                (tableaux 4.2, 4.3, 4.4, choix du modèle final)
+       graphes animés : les barres poussent, les valeurs défilent, la courbe
+       se trace. Classes préfixées yo- (autonomes).
+       clics : 1) matériel  2) initialisation  3) version  4) taille
+               5) modèle retenu
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c33" class="slide" data-sec="5" data-hidden="1" data-noside="1" data-foot="Annexe" data-title="Annexe · Essais YOLO">
+    <style>
+      /* bouton de retour, commun aux annexes */
+      .slide .retour{font:inherit;font-size:13.5px;color:var(--insa-d);background:#fff;border:1px solid var(--insa);padding:7px 14px;cursor:pointer;white-space:nowrap}
+      .slide .retour:hover{background:var(--insa);color:#fff}
+      #c33 .yo{display:flex;flex-direction:column;justify-content:center;gap:16px;height:100%}
+      #c33 .yo-intro{margin:0;max-width:none;font-size:16.5px;line-height:1.5;color:var(--ink)}
+      #c33 .yo-intro b{color:var(--insa-d)}
+      #c33 .yo-grille{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 18px}
+      #c33 .yo-carte{border:1px solid var(--rule);border-top:3px solid var(--insa);background:#fff;padding:12px 15px;display:flex;flex-direction:column;gap:8px;min-width:0}
+      #c33 .yo-large{grid-column:span 2}
+      #c33 .yo-tete{display:flex;align-items:baseline;gap:9px}
+      #c33 .yo-num{font-family:var(--f-serif);font-size:26px;font-weight:600;color:var(--insa);line-height:1}
+      #c33 .yo-tete h3{margin:0;font-size:16.5px;line-height:1.25}
+      #c33 .yo-tete small{display:block;font-size:12.5px;font-weight:400;color:var(--muted)}
+      #c33 .yo-res{align-self:flex-start;font-size:13px;font-weight:600;color:var(--insa-d);background:var(--insa-t);padding:4px 9px;margin-top:auto}
+
+      /* barres horizontales */
+      #c33 .yo-bloc{display:flex;flex-direction:column;gap:5px}
+      #c33 .yo-cap{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim, #9a9ea1);display:flex;justify-content:space-between}
+      #c33 .yo-cap em{font-style:normal;text-transform:none;letter-spacing:0}
+      #c33 .yo-barre{display:grid;grid-template-columns:96px 1fr 84px;align-items:center;gap:8px;font-size:13.5px}
+      #c33 .yo-lab{color:var(--ink);white-space:nowrap}
+      #c33 .yo-lab small{display:block;font-size:10.5px;color:var(--muted);line-height:1.1}
+      #c33 .yo-piste{height:15px;background:#f1f1ef;position:relative}
+      #c33 .yo-piste i{position:absolute;left:0;top:0;bottom:0;width:calc(var(--v)*100%);background:#b5b8ba;transform:scaleX(0);transform-origin:left;transition:transform 1.1s cubic-bezier(.2,.8,.2,1)}
+      #c33 .yo-ok .yo-piste i{background:var(--insa)}
+      #c33 .yo-ok .yo-lab{font-weight:600;color:var(--insa-d)}
+      #c33 .yo-val{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+      #c33 .yo-val b{color:var(--ink);font-weight:600}
+      #c33 .yo-ok .yo-val b{color:var(--insa-d)}
+      #c33 .frag.on .yo-piste i{transform:scaleX(1)}
+      #c33 .frag.on .yo-barre:nth-of-type(2) .yo-piste i{transition-delay:.15s}
+      #c33 .frag.on .yo-barre:nth-of-type(3) .yo-piste i{transition-delay:.3s}
+      #c33 .frag.on .yo-bloc + .yo-bloc .yo-piste i{transition-delay:.5s}
+      #c33 .frag.on .yo-bloc + .yo-bloc .yo-barre:nth-of-type(3) .yo-piste i{transition-delay:.65s}
+
+      /* piste des époques (0 → 300) */
+      #c33 .yo-ep{position:relative;height:22px;margin:4px 84px 12px 104px;border-bottom:1px solid var(--rule)}
+      #c33 .yo-ep span{position:absolute;bottom:-5px;left:calc(var(--e)/300*100%);width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:#b5b8ba;transform:scale(0);transition:transform .5s cubic-bezier(.3,1.6,.5,1) .9s}
+      #c33 .yo-ep span.yo-r{background:var(--insa)}
+      #c33 .yo-ep span b{position:absolute;bottom:11px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:600;white-space:nowrap;color:var(--muted)}
+      #c33 .yo-ep span.yo-r b{color:var(--insa-d)}
+      #c33 .yo-ep span.yo-bas b{bottom:auto;top:11px}
+      #c33 .yo-ep::after{content:"meilleure époque / 300";position:absolute;right:-84px;bottom:-6px;width:80px;font-size:10px;line-height:1.1;color:var(--dim, #9a9ea1);text-align:right}
+      #c33 .frag.on .yo-ep span{transform:scale(1)}
+
+      /* graphe précision × durée */
+      #c33 .yo-graphe{display:grid;grid-template-columns:1fr 250px;gap:16px;align-items:center}
+      #c33 svg{display:block;width:100%;height:auto;background:#FBFBF9;border:1px solid #eee}
+      #c33 svg text{font-family:var(--f-sans)}
+      #c33 .yo-ligne{stroke-dasharray:520;stroke-dashoffset:520;transition:stroke-dashoffset 1.6s ease .2s}
+      #c33 .frag.on .yo-ligne{stroke-dashoffset:0}
+      #c33 .yo-pt{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(0);transition:opacity .3s,transform .55s cubic-bezier(.3,1.6,.5,1)}
+      #c33 .frag.on .yo-pt{opacity:1;transform:scale(1)}
+      #c33 .frag.on .yo-p1{transition-delay:.2s} #c33 .frag.on .yo-p2{transition-delay:.45s}
+      #c33 .frag.on .yo-p3{transition-delay:.85s} #c33 .frag.on .yo-p4{transition-delay:1.6s}
+      #c33 .yo-an{opacity:0;transition:opacity .5s}
+      #c33 .frag.on .yo-an1{opacity:1;transition-delay:1.1s}
+      #c33 .frag.on .yo-an2{opacity:1;transition-delay:1.9s}
+      #c33 .yo-halo{transform-box:fill-box;transform-origin:center;animation:none}
+      #c33.active .frag.on .yo-halo{animation:yoHalo 2.2s ease-out 2.1s infinite}
+      @keyframes yoHalo{0%{transform:scale(1);opacity:.55}100%{transform:scale(2.3);opacity:0}}
+      #c33 .yo-lect{margin:0;max-width:none;font-size:13.5px;line-height:1.5;color:var(--ink)}
+      #c33 .yo-lect p{margin:0 0 8px;max-width:none;font-size:14px;line-height:1.5}
+      #c33 .yo-lect b{color:var(--insa-d)}
+      #c33 .yo-mini{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--rule);padding-top:7px}
+      #c33 .yo-mini b{color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+
+      /* carte finale */
+      #c33 .yo-fin{background:var(--insa-t);border-top-color:var(--insa-d);justify-content:center;gap:10px}
+      #c33 .yo-fin h3{margin:0;font-size:15px;color:var(--muted);font-weight:500}
+      #c33 .yo-nom{font-family:var(--f-serif);font-size:25px;font-weight:600;color:var(--insa-d);line-height:1.15}
+      #c33 .yo-nom small{display:block;font-family:var(--f-sans);font-size:12.5px;font-weight:400;color:var(--muted)}
+      #c33 .yo-chiffres{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      #c33 .yo-chiffres div{background:#fff;border:1px solid var(--rule);padding:9px 10px;text-align:center}
+      #c33 .yo-chiffres b{display:block;font-family:var(--f-serif);font-size:30px;font-weight:600;color:var(--insa);line-height:1.05;font-variant-numeric:tabular-nums}
+      #c33 .yo-chiffres span{font-size:12px;color:var(--muted)}
+      #c33 .yo-pile{margin:0;padding:0;list-style:none;font-size:13px;line-height:1.45;color:var(--ink)}
+      #c33 .yo-pile li{padding-left:16px;position:relative}
+      #c33 .yo-pile li::before{content:"✓";position:absolute;left:0;color:var(--insa);font-weight:700}
+    </style>
+    <div class="ft"><div><h1>Résultats des campagnes de tests YOLO</h1><div class="fsub">Annexe A2 — hors déroulé · complément de la partie 1</div></div>
+      <div class="fright"><button class="retour" type="button">↩ Retour à la présentation</button></div></div>
+    <div class="fr-body">
+     <div class="yo">
+      <p class="yo-intro">Chaque essai tourne sur <b>~10 % du jeu de données</b>, <b>300 époques</b> allouées, et ne fait varier <b>qu'un seul paramètre</b> à la fois. Le gagnant de chaque campagne sert de base à la suivante. Métrique : précision maximale en validation.</p>
+
+      <div class="yo-grille">
+        <!-- 1 · matériel -->
+        <div class="yo-carte frag">
+          <div class="yo-tete"><span class="yo-num">1</span><h3>Étalonnage matériel<small>16 réglages lot × processus, 5 passages</small></h3></div>
+          <div class="yo-bloc">
+            <div class="yo-cap">Débit effectif <em>images / seconde</em></div>
+            <div class="yo-barre"><span class="yo-lab">Fixe 1<small>RTX 3080</small></span><span class="yo-piste"><i style="--v:.4497"></i></span><span class="yo-val"><b data-to="134.9" data-dec="1">134,9</b> img/s</span></div>
+            <div class="yo-barre"><span class="yo-lab">Mobile<small>RTX 5090 Laptop</small></span><span class="yo-piste"><i style="--v:.5923"></i></span><span class="yo-val"><b data-to="177.7" data-dec="1">177,7</b> img/s</span></div>
+            <div class="yo-barre yo-ok"><span class="yo-lab">Fixe 2<small>RTX 5090</small></span><span class="yo-piste"><i style="--v:.9877"></i></span><span class="yo-val"><b data-to="296.3" data-dec="1">296,3</b> img/s</span></div>
+          </div>
+          <div class="yo-bloc">
+            <div class="yo-cap">Taille de lot optimale <em>images traitées ensemble</em></div>
+            <div class="yo-barre"><span class="yo-lab">Fixe 1</span><span class="yo-piste"><i style="--v:.25"></i></span><span class="yo-val"><b>8</b> · 8 proc.</span></div>
+            <div class="yo-barre"><span class="yo-lab">Mobile</span><span class="yo-piste"><i style="--v:.5"></i></span><span class="yo-val"><b>16</b> · 8 proc.</span></div>
+            <div class="yo-barre yo-ok"><span class="yo-lab">Fixe 2</span><span class="yo-piste"><i style="--v:1"></i></span><span class="yo-val"><b>32</b> · 16 proc.</span></div>
+          </div>
+          <span class="yo-res">Station fixe 2 retenue · débit ×2,2</span>
+        </div>
+
+        <!-- 2 · initialisation -->
+        <div class="yo-carte frag">
+          <div class="yo-tete"><span class="yo-num">2</span><h3>Stratégie d’initialisation<small>transfert d’apprentissage ou ex nihilo · YOLOv8 Small</small></h3></div>
+          <div class="yo-bloc">
+            <div class="yo-cap">Précision max. <em>axe 0,70 → 0,90</em></div>
+            <div class="yo-barre yo-ok"><span class="yo-lab">Transfert<small>poids COCO</small></span><span class="yo-piste"><i style="--v:.56"></i></span><span class="yo-val"><b data-to="0.812" data-dec="3">0,812</b></span></div>
+            <div class="yo-barre"><span class="yo-lab">Ex nihilo<small>aléatoire</small></span><span class="yo-piste"><i style="--v:.50"></i></span><span class="yo-val"><b data-to="0.800" data-dec="3">0,800</b></span></div>
+          </div>
+          <div class="yo-bloc">
+            <div class="yo-cap">Durée <em>axe 0 → 100 h</em></div>
+            <div class="yo-barre yo-ok"><span class="yo-lab">Transfert</span><span class="yo-piste"><i style="--v:.5575"></i></span><span class="yo-val"><b>55 h 45</b></span></div>
+            <div class="yo-barre"><span class="yo-lab">Ex nihilo</span><span class="yo-piste"><i style="--v:.5538"></i></span><span class="yo-val"><b>55 h 23</b></span></div>
+          </div>
+          <div class="yo-ep"><span class="yo-r" style="--e:279"><b>FT 279</b></span><span class="yo-bas" style="--e:243"><b>FS 243</b></span></div>
+          <span class="yo-res">Transfert retenu : +1,2 pt à coût égal</span>
+        </div>
+
+        <!-- 3 · version -->
+        <div class="yo-carte frag">
+          <div class="yo-tete"><span class="yo-num">3</span><h3>Version de l’architecture<small>YOLOv8 et YOLO26 · format Small</small></h3></div>
+          <div class="yo-bloc">
+            <div class="yo-cap">Précision max. <em>axe 0,70 → 0,90</em></div>
+            <div class="yo-barre yo-ok"><span class="yo-lab">YOLOv8</span><span class="yo-piste"><i style="--v:.56"></i></span><span class="yo-val"><b data-to="0.812" data-dec="3">0,812</b></span></div>
+            <div class="yo-barre"><span class="yo-lab">YOLO26</span><span class="yo-piste"><i style="--v:.175"></i></span><span class="yo-val"><b data-to="0.735" data-dec="3">0,735</b></span></div>
+          </div>
+          <div class="yo-bloc">
+            <div class="yo-cap">Durée <em>axe 0 → 100 h</em></div>
+            <div class="yo-barre yo-ok"><span class="yo-lab">YOLOv8</span><span class="yo-piste"><i style="--v:.5575"></i></span><span class="yo-val"><b>55 h 45</b></span></div>
+            <div class="yo-barre"><span class="yo-lab">YOLO26</span><span class="yo-piste"><i style="--v:.9318"></i></span><span class="yo-val"><b>93 h 11</b></span></div>
+          </div>
+          <div class="yo-ep"><span class="yo-r" style="--e:279"><b>v8 279</b></span><span class="yo-bas" style="--e:58"><b>v26 58</b></span></div>
+          <span class="yo-res">YOLOv8 retenu : +7,7 pts · YOLO26 sature à l'époque 58</span>
+        </div>
+
+        <!-- 4 · taille -->
+        <div class="yo-carte yo-large frag">
+          <div class="yo-tete"><span class="yo-num">4</span><h3>Capacité du modèle<small>YOLOv8 · Nano, Small, Medium, Large · disque ∝ nombre de paramètres</small></h3></div>
+          <div class="yo-graphe">
+            <svg viewBox="0 0 640 250" aria-hidden="true">
+              <g stroke="#ecedeb" stroke-width="1">
+                <line x1="50" y1="20" x2="620" y2="20"/><line x1="50" y1="67.5" x2="620" y2="67.5"/><line x1="50" y1="115" x2="620" y2="115"/><line x1="50" y1="162.5" x2="620" y2="162.5"/>
+                <line x1="192.5" y1="20" x2="192.5" y2="210"/><line x1="335" y1="20" x2="335" y2="210"/><line x1="477.5" y1="20" x2="477.5" y2="210"/>
+              </g>
+              <path d="M50 20 V210 H620" fill="none" stroke="#8b8f92" stroke-width="1.2"/>
+              <g font-size="11" fill="#8b8f92" text-anchor="end">
+                <text x="44" y="24">0,87</text><text x="44" y="71.5">0,84</text><text x="44" y="119">0,81</text><text x="44" y="166.5">0,78</text><text x="44" y="214">0,75</text>
+              </g>
+              <g font-size="11" fill="#8b8f92" text-anchor="middle">
+                <text x="50" y="228">0</text><text x="192.5" y="228">50 h</text><text x="335" y="228">100 h</text><text x="477.5" y="228">150 h</text><text x="620" y="228">200 h</text>
+              </g>
+              <text x="620" y="244" font-size="11" fill="#9a9ea1" text-anchor="end">durée d'entraînement →</text>
+              <text x="56" y="14" font-size="11" fill="#9a9ea1">↑ précision max.</text>
+
+              <path class="yo-ligne" d="M197.3 184.7 L208.9 111.8 L286.6 59.6 L582.4 29.5" fill="none" stroke="#3D5A94" stroke-width="2" stroke-opacity=".55"/>
+
+              <g class="yo-pt yo-p1"><circle cx="197.3" cy="184.7" r="5" fill="#b5b8ba"/><text x="187" y="188.5" font-size="12" fill="#3a3f44" text-anchor="end">Nano 0,766</text></g>
+              <g class="yo-pt yo-p2"><circle cx="208.9" cy="111.8" r="9" fill="#b5b8ba"/><text x="197" y="115.5" font-size="12" fill="#3a3f44" text-anchor="end">Small 0,812</text></g>
+              <g class="yo-pt yo-p3">
+                <circle class="yo-halo" cx="286.6" cy="59.6" r="13" fill="none" stroke="#3D5A94" stroke-width="2"/>
+                <circle cx="286.6" cy="59.6" r="13" fill="#3D5A94"/>
+                <text x="286.6" y="36" font-size="12.5" font-weight="700" fill="#3A385C" text-anchor="middle">Medium 0,845 · retenu</text>
+              </g>
+              <g class="yo-pt yo-p4"><circle cx="582.4" cy="29.5" r="14" fill="#b5b8ba"/><text x="566" y="55" font-size="12" fill="#3a3f44" text-anchor="end">Large 0,864</text></g>
+
+              <g class="yo-an yo-an1"><rect x="216" y="104" width="148" height="20" fill="#fff" stroke="#3D5A94" stroke-opacity=".4"/><text x="290" y="118" font-size="11.5" font-weight="600" fill="#3A385C" text-anchor="middle">+3,3 pts pour +27 h</text></g>
+              <g class="yo-an yo-an2"><rect x="362" y="68" width="152" height="20" fill="#fff" stroke="#8b8f92" stroke-opacity=".5"/><text x="438" y="82" font-size="11.5" font-weight="600" fill="#6b7075" text-anchor="middle">+1,9 pt pour +104 h</text></g>
+            </svg>
+            <div class="yo-lect">
+              <p>Plus le réseau est gros, plus il est précis, mais le <b>rendement décroît</b> : passer de Medium à Large coûte <b>près de 4 fois plus d'heures</b> pour un gain presque deux fois plus faible.</p>
+              <div class="yo-mini">
+                <span>Nano · 2,7 M</span><b>51 h 41 · ép. 272</b>
+                <span>Small · 10,4 M</span><b>55 h 45 · ép. 279</b>
+                <span>Medium · 23,6 M</span><b>82 h 59 · ép. 292</b>
+                <span>Large · 28,0 M</span><b>186 h 47 · ép. 299</b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 · modèle retenu -->
+        <div class="yo-carte yo-fin frag">
+          <h3>Configuration retenue</h3>
+          <div class="yo-nom">YOLOv8 Medium<small>yolov8m-seg · transfert COCO · station fixe 2</small></div>
+          <div class="yo-chiffres">
+            <div><b data-to="83.5" data-dec="1" data-suf=" %">83,5 %</b><span>précision finale</span></div>
+            <div><b data-to="17.02" data-dec="2" data-suf=" j">17,02 j</b><span>entraînement complet</span></div>
+          </div>
+          <ul class="yo-pile">
+            <li>transfert ≥ ex nihilo, à coût égal</li>
+            <li>v8 plus précis et plus rapide que YOLO26</li>
+            <li>Medium : meilleur compromis précision / temps</li>
+          </ul>
+        </div>
+      </div>
+     </div>
+    </div>
+    <script>
+      /* valeurs qui défilent à l'apparition de chaque graphe */
+      (function(){
+        var sec = document.getElementById('c33');
+        if (!sec) return;
+        function ecrire(el, x){
+          var d = +el.dataset.dec || 0;
+          el.textContent = x.toFixed(d).replace('.', ',') + (el.dataset.suf || '');
+        }
+        function defiler(el){
+          var cible = parseFloat(el.dataset.to), d = +el.dataset.dec || 0;
+          var depart = d >= 3 ? 0.70 : 0, t0 = null, duree = 1100;
+          cancelAnimationFrame(el._yo);
+          function pas(t){
+            if (t0 === null) t0 = t;
+            var k = Math.min(1, (t - t0) / duree), e = 1 - Math.pow(1 - k, 3);
+            ecrire(el, depart + (cible - depart) * e);
+            if (k < 1) el._yo = requestAnimationFrame(pas);
+          }
+          el._yo = requestAnimationFrame(pas);
+        }
+        sec.querySelectorAll('.frag').forEach(function(f){
+          var etait = f.classList.contains('on');
+          new MutationObserver(function(){
+            var est = f.classList.contains('on');
+            if (est && !etait) f.querySelectorAll('[data-to]').forEach(defiler);
+            if (!est) f.querySelectorAll('[data-to]').forEach(function(el){ cancelAnimationFrame(el._yo); ecrire(el, parseFloat(el.dataset.to)); });
+            etait = est;
+          }).observe(f, {attributes:true, attributeFilter:['class']});
+        });
+      })();
+    </script>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A6 · Annexe · Fonction de coût
+       partie : annexe   |   type : contenu (caché)   |   ancre : #c34
+       complément du cadre 17 (Fonction de coût), pour les questions du jury
+       source : rapport §3.1.3 (équation 3.2, banc de test, descente par
+       coordonnées) et §4.1.4 (tableau 4.7)
+       format oral : une étape par carte, un schéma, une phrase en clair,
+       la formule en petit, le résultat. Classes préfixées fc- (autonomes).
+       clics : 1) banc de test  2) terme géométrique  3) terme topologique
+               4) descente par coordonnées  5) conclusion
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c34" class="slide" data-sec="5" data-hidden="1" data-noside="1" data-foot="Annexe" data-title="Annexe · Fonction de coût">
+    <style>
+      /* bouton de retour, commun aux annexes */
+      .slide .retour{font:inherit;font-size:13.5px;color:var(--insa-d);background:#fff;border:1px solid var(--insa);padding:7px 14px;cursor:pointer;white-space:nowrap}
+      .slide .retour:hover{background:var(--insa);color:#fff}
+      #c34 .fc{display:flex;flex-direction:column;justify-content:center;gap:18px;height:100%}
+      #c34 .fc-intro{margin:0;max-width:none;font-size:17px;line-height:1.5;color:var(--ink)}
+      #c34 .fc-intro b{color:var(--insa-d)}
+      #c34 .fc-grille{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+      #c34 .fc-carte{border:1px solid var(--rule);border-top:3px solid var(--insa);background:#fff;padding:13px 15px;display:flex;flex-direction:column;gap:9px}
+      #c34 .fc-tete{display:flex;align-items:baseline;gap:9px}
+      #c34 .fc-num{font-family:var(--f-serif);font-size:28px;font-weight:600;color:var(--insa);line-height:1}
+      #c34 .fc-tete h3{margin:0;font-size:17px;line-height:1.25}
+      #c34 .fc-tete small{display:block;font-size:12.5px;font-weight:400;color:var(--muted)}
+      #c34 svg{display:block;width:100%;height:auto;background:#FBFBF9;border:1px solid #eee}
+      #c34 .fc-clair{margin:0;max-width:none;font-size:14.5px;line-height:1.48;color:var(--ink)}
+      #c34 .fc-fx{font-family:var(--f-serif);font-size:15px;color:var(--muted);text-align:center;border-top:1px dashed var(--rule);padding-top:7px;line-height:1.5;margin-top:auto}
+      #c34 .fc-fx i{font-style:italic}
+      #c34 .fc-fx small{display:block;font-family:var(--f-sans);font-size:12px}
+      #c34 .fc-fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:12.5px;line-height:1.15;margin:0 2px}
+      #c34 .fc-fr span:first-child{border-bottom:1px solid var(--muted);padding:0 4px 1px}
+      #c34 .fc-res{align-self:flex-start;font-size:13px;font-weight:600;color:var(--insa-d);background:var(--insa-t);padding:4px 9px}
+      #c34 .fc-fin{margin:0;max-width:none;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;border-left:4px solid var(--insa);background:var(--insa-t);padding:10px 16px;font-size:15px;line-height:1.45;color:var(--ink)}
+      #c34 .fc-fin .fc-eq{font-family:var(--f-serif);font-size:18px;white-space:nowrap}
+      #c34 .fc-fin .fc-eq i{font-style:italic}
+    </style>
+    <div class="ft"><div><h1>Fonction de coût et recherche du réglage optimal</h1><div class="fsub">Annexe A3 — hors déroulé · complément de la partie 2</div></div>
+      <div class="fright"><button class="retour" type="button">↩ Retour à la présentation</button></div></div>
+    <div class="fr-body">
+     <div class="fc">
+      <p class="fc-intro">Les paramètres de Roofer étaient jusqu'ici choisis <b>à la main</b> selon trois typologies de bâti. On cherche <b>un seul réglage</b>, trouvé automatiquement en comparant les reconstructions à la maquette LoD2 de l'<b>Eurométropole</b>.</p>
+
+      <div class="fc-grille">
+        <!-- 1 · banc de test -->
+        <div class="fc-carte frag">
+          <div class="fc-tete"><span class="fc-num">1</span><h3>Banc de test<small>évaluation d’un jeu de paramètres θ</small></h3></div>
+          <svg viewBox="0 0 300 120" aria-hidden="true">
+            <defs><marker id="fcfl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#3A385C"/></marker></defs>
+            <g font-size="12" text-anchor="middle">
+              <rect x="10" y="12" width="120" height="34" fill="#fff" stroke="#3D5A94"/><text x="70" y="34" fill="#3a3f44">paramètres θ</text>
+              <rect x="170" y="12" width="120" height="34" fill="#fff" stroke="#3D5A94"/><text x="230" y="34" fill="#3a3f44">Roofer</text>
+              <rect x="170" y="74" width="120" height="34" fill="#fff" stroke="#3D5A94"/><text x="230" y="90" fill="#3a3f44">comparaison</text><text x="230" y="103" fill="#9a9ea1" font-size="10.5">à la maquette EMS</text>
+              <rect x="10" y="74" width="120" height="34" fill="#3D5A94" opacity=".12"/><rect x="10" y="74" width="120" height="34" fill="none" stroke="#3D5A94"/><text x="70" y="96" fill="#3A385C" font-weight="600">score</text>
+            </g>
+            <g stroke="#3A385C" stroke-width="1.8" fill="none">
+              <path d="M132 29 H166" marker-end="url(#fcfl)"/><path d="M230 48 V70" marker-end="url(#fcfl)"/>
+              <path d="M168 91 H134" marker-end="url(#fcfl)"/><path d="M70 72 V50" marker-end="url(#fcfl)"/>
+            </g>
+          </svg>
+          <p class="fc-clair">Pour chaque réglage, Roofer reconstruit les bâtiments ; chacun est comparé à son <b>homologue de référence</b>. Le score résume cette comparaison : <b>plus il est bas, mieux c'est</b>.</p>
+          <span class="fc-res">3 zones d'essai · vérité terrain EMS</span>
+        </div>
+
+        <!-- 2 · terme géométrique -->
+        <div class="fc-carte frag">
+          <div class="fc-tete"><span class="fc-num">2</span><h3>Terme géométrique<small>fidélité à la référence (RMSE)</small></h3></div>
+          <svg viewBox="0 0 300 120" aria-hidden="true">
+            <path d="M30 96 L150 30 L270 96" fill="none" stroke="#3a3f44" stroke-width="3"/>
+            <text x="276" y="112" font-size="11" fill="#3a3f44" text-anchor="end">toit de référence</text>
+            <g stroke="#3D5A94" stroke-width="1.4">
+              <line x1="60" y1="72" x2="64" y2="79"/><line x1="100" y1="62" x2="96" y2="57"/><line x1="148" y1="40" x2="149" y2="31"/><line x1="200" y1="66" x2="196" y2="58"/><line x1="240" y1="74" x2="243" y2="80"/>
+            </g>
+            <g fill="#3D5A94"><circle cx="60" cy="72" r="3.5"/><circle cx="100" cy="62" r="3.5"/><circle cx="148" cy="40" r="3.5"/><circle cx="200" cy="66" r="3.5"/><circle cx="240" cy="74" r="3.5"/></g>
+            <text x="112" y="80" font-size="12" fill="#3D5A94" font-style="italic">d<tspan font-size="9" dy="2">i</tspan></text>
+            <text x="16" y="18" font-size="11" fill="#3D5A94">● sommets reconstruits</text>
+          </svg>
+          <p class="fc-clair">Pour chaque sommet du modèle reconstruit, on mesure sa <b>distance</b> à la surface de référence la plus proche, puis la moyenne quadratique (RMSE).</p>
+          <div class="fc-fx">√( <span class="fc-fr"><span>1</span><span><i>n</i></span></span> Σ <i>d<sub>i</sub></i>² )<small>d<sub>i</sub> : distance sommet → surface EMS</small></div>
+        </div>
+
+        <!-- 3 · terme topologique -->
+        <div class="fc-carte frag">
+          <div class="fc-tete"><span class="fc-num">3</span><h3>Terme topologique<small>pénalisation des pans parasites</small></h3></div>
+          <svg viewBox="0 0 300 120" aria-hidden="true">
+            <g fill="#3D5A94" fill-opacity=".14" stroke="#3a3f44" stroke-width="1.6">
+              <path d="M20 90 L75 40 L130 90 Z"/>
+            </g>
+            <text x="75" y="108" font-size="11" fill="#3a3f44" text-anchor="middle">référence : 2 pans</text>
+            <g fill="#3D5A94" fill-opacity=".14" stroke="#3D5A94" stroke-width="1.4">
+              <path d="M170 90 L186 70 L200 76 L212 52 L225 44 L238 55 L250 49 L262 72 L280 90 Z"/>
+              <path d="M186 70 L200 90 M212 52 L215 90 M238 55 L240 90 M262 72 L260 90" fill="none"/>
+            </g>
+            <text x="225" y="108" font-size="11" fill="#3D5A94" text-anchor="middle">bruit épousé : 8 pans</text>
+          </svg>
+          <p class="fc-clair">Sans garde-fou, l'algorithme <b>épouse le bruit</b> du nuage : le toit se fragmente en pans parasites. On pénalise l'écart du <b>nombre de faces</b> avec la référence.</p>
+          <div class="fc-fx"><i>λ</i> · | <i>F</i><sub>test</sub> − <i>F</i><sub>réf</sub> |<small>F : nombre de faces · λ : poids du compromis</small></div>
+        </div>
+
+        <!-- 4 · descente par coordonnées -->
+        <div class="fc-carte frag">
+          <div class="fc-tete"><span class="fc-num">4</span><h3>Descente par coordonnées<small>minimisation, un paramètre à la fois</small></h3></div>
+          <svg viewBox="0 0 300 120" aria-hidden="true">
+            <g fill="none" stroke="#d6d8da">
+              <ellipse cx="200" cy="62" rx="90" ry="48"/><ellipse cx="200" cy="62" rx="60" ry="32"/><ellipse cx="200" cy="62" rx="30" ry="16"/>
+            </g>
+            <circle cx="200" cy="62" r="3" fill="#3a3f44"/>
+            <path d="M40 100 H120 V70 H170 V62 H200" fill="none" stroke="#3D5A94" stroke-width="2.2"/>
+            <g fill="#3A385C"><circle cx="40" cy="100" r="3.5"/><circle cx="120" cy="100" r="3"/><circle cx="120" cy="70" r="3"/><circle cx="170" cy="70" r="3"/><circle cx="170" cy="62" r="3"/></g>
+            <text x="30" y="92" font-size="11" fill="#3A385C">départ</text>
+            <text x="208" y="58" font-size="11" fill="#3a3f44">score minimal</text>
+            <text x="16" y="18" font-size="11" fill="#9a9ea1">un paramètre à la fois</text>
+          </svg>
+          <p class="fc-clair">À chaque cycle, chacun des <b>4 paramètres</b> est décalé d'un pas, dans un sens puis dans l'autre. Le changement n'est <b>gardé que si le score baisse</b>. Départ depuis le réglage empirique existant.</p>
+          <span class="fc-res">3 cycles · valeurs finales proches du départ</span>
+        </div>
+      </div>
+
+      <p class="fc-fin frag"><span class="fc-eq">Score = √(<sup>1</sup>/<sub><i>n</i></sub> Σ <i>d<sub>i</sub></i>²) + <i>λ</i> · |<i>F</i><sub>test</sub> − <i>F</i><sub>réf</sub>|</span><span><b>Résultat</b> — complexité 0,50 → 0,54 · ε 0,65 → 0,63 m · k 35 → 38 · points min. 45 → 48. Le réglage change peu, mais <b>une configuration unique</b> remplace les trois configurations typologiques : plus aucun choix manuel.</span></p>
+     </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A7 · Annexe · Dépliage gnomonique
+       partie : annexe   |   type : contenu (caché)   |   ancre : #c35
+       complément du cadre 23 (Étape 2 · Dépliage), pour les questions du jury
+       source : rapport §3.2.2, figures 3.5 à 3.8, 3.10, 3.11, notes 6, 7 et 9
+       mise en page : 4 étapes à gauche ; à droite la figure de l'étape en
+       cours, qui remplace la précédente à chaque clic
+       clics : 1) géométrie  2) projection gnomonique  3) caméra virtuelle
+               4) CLAHE  5) effet sur SIFT  6) limite
+       IMAGES : PFE_PRESENTATION_50 (panorama + métadonnées, fig. 3.5)
+                PFE_PRESENTATION_51 (géométrie des 6 vues, fig. 3.6)
+                PFE_PRESENTATION_38 (dépliage en 6 vues, fig. 3.7 — déjà au cadre 23)
+                PFE_PRESENTATION_52 (mire de vérification, fig. 3.8)
+                PFE_PRESENTATION_53 (CLAHE et histogrammes, fig. 3.10)
+                PFE_PRESENTATION_39 (points SIFT avant/après, fig. 3.11 — déjà au cadre 23)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c35" class="slide" data-sec="5" data-hidden="1" data-noside="1" data-foot="Annexe" data-title="Annexe · Dépliage gnomonique">
+    <style>
+      /* bouton de retour, commun aux annexes */
+      .slide .retour{font:inherit;font-size:13.5px;color:var(--insa-d);background:#fff;border:1px solid var(--insa);padding:7px 14px;cursor:pointer;white-space:nowrap}
+      .slide .retour:hover{background:var(--insa);color:#fff}
+      #c35 .dp{display:grid;grid-template-columns:500px 1fr;gap:32px;height:100%;min-height:0}
+      #c35 .dp-etapes{display:flex;flex-direction:column;gap:6px;justify-content:center;min-height:0}
+      #c35 .dp-etape{border:1px solid var(--rule);border-left:4px solid var(--insa);padding:7px 14px;background:#fff;transition:opacity .4s}
+      #c35 .dp-etape .dp-n{font-family:var(--f-serif);font-size:12.5px;font-weight:600;color:var(--insa)}
+      #c35 .dp-etape h3{margin:0 0 2px;font-size:15.5px}
+      #c35 .dp-etape p{margin:0;font-size:13px;line-height:1.4;color:var(--muted);max-width:none}
+      #c35 .dp-etape p b{color:var(--ink)}
+      #c35 .dp-etape .dp-fx{font-family:var(--f-serif);color:var(--ink);font-size:14px}
+      /* l'étape en cours reste nette, les précédentes s'estompent */
+      #c35 .dp-etape.on:has(~ .dp-etape.on){opacity:.45}
+      #c35 .dp-lim{margin:0;max-width:none;font-size:13px;line-height:1.4;color:var(--muted);background:var(--insa-t);border-left:4px solid var(--insa-dd);padding:8px 14px}
+      #c35 .dp-lim b{color:var(--ink)}
+      /* figures empilées : la dernière révélée recouvre les précédentes */
+      #c35 .dp-scene{position:relative;min-height:0}
+      #c35 .dp-scene figure{position:absolute;inset:0;margin:0;background:#fff;display:flex;flex-direction:column;gap:8px;justify-content:center}
+      #c35 .dp-scene img{display:block;width:100%;min-height:0;flex:0 1 auto;max-height:calc(100% - 30px);object-fit:contain}
+      #c35 .dp-scene figcaption{font-size:12.5px;font-style:italic;color:var(--muted)}
+    </style>
+    <div class="ft"><div><h1>Dépliage des panoramas : le détail</h1><div class="fsub">Annexe A4 — hors déroulé · complément de l'étape 2</div></div>
+      <div class="fright"><button class="retour" type="button">↩ Retour à la présentation</button></div></div>
+    <div class="fr-body">
+     <div class="dp">
+      <div class="dp-etapes">
+        <div class="dp-etape on">
+          <span class="dp-n">1 · Donnée source</span>
+          <h3>Panorama équirectangulaire</h3>
+          <p>360° × 180° en <b>7 680 × 3 840 px</b>, droites courbées. Les métadonnées (position, azimut, date) donnent l'<b>orientation absolue</b> des vues. Bandeau inférieur (véhicule, logo) exclu.</p>
+        </div>
+        <div class="dp-etape frag" data-step="e2">
+          <span class="dp-n">2 · Géométrie</span>
+          <h3>Six vues, 30° de recouvrement</h3>
+          <p>Une vue tous les <b>60°</b>, champ de <b>90°</b>. Même centre optique, donc <b>base nulle</b> : le recouvrement fixe l'orientation relative, la profondeur vient du <b>déplacement entre panoramas</b>.</p>
+        </div>
+        <div class="dp-etape frag" data-step="e3">
+          <span class="dp-n">3 · Projection gnomonique</span>
+          <h3>Du pixel à la sphère</h3>
+          <p>Pixel → <b>direction</b> → longitude, latitude → lecture du panorama en <b>bicubique</b> (remappage OpenCV). Droites redressées : perspective <b>sténopé</b>.</p>
+        </div>
+        <div class="dp-etape frag" data-step="e4">
+          <span class="dp-n">4 · Caméra virtuelle</span>
+          <h3>Calibration exacte, vérifiée</h3>
+          <p><span class="dp-fx"><i>f</i> = (<i>T</i>/2) / tan(FOV/2) = 1 024 px</span>, paramètres <b>figés</b>. Mire tous les 10°, loi <span class="dp-fx"><i>x</i> = <i>f</i> tan <i>θ</i> + <i>c<sub>x</sub></i></span> : <b>1 024,34 px</b> mesurés, résidu max. <b>0,50 px</b>.</p>
+        </div>
+        <div class="dp-etape frag" data-step="e5">
+          <span class="dp-n">5 · Égalisation</span>
+          <h3>CLAHE sur la luminosité</h3>
+          <p>Histogramme égalisé <b>par blocs</b>, avec <b>écrêtage</b> pour ne pas amplifier le bruit des zones homogènes. Les contrastes sont harmonisés d'une séquence à l'autre, <b>couleurs préservées</b>.</p>
+        </div>
+        <div class="dp-etape frag" data-step="e6">
+          <span class="dp-n">6 · Effet sur la détection</span>
+          <h3>× 2,6 points SIFT</h3>
+          <p>SIFT repose sur les extrema du gradient d'intensité : sur la vue égalisée, <b>16 232 → 42 939</b> points détectés, notamment sur les zones sombres (vitrines, pavés).</p>
+        </div>
+        <p class="dp-lim frag"><b>Limite</b> — la calibration de la caméra d'origine est déléguée au contributeur Panoramax : un défaut d'alignement des capteurs laisse une <b>parallaxe figée</b> dans le panorama, impossible à compenser.</p>
+      </div>
+
+      <div class="dp-scene">
+        <figure>
+          <img src="assets/PFE_PRESENTATIONS_ANNEXES_1.png" alt="Panorama source et métadonnées">
+          <figcaption>Panorama Panoramax en projection équirectangulaire et métadonnées associées (rapport, fig. 3.5).</figcaption>
+        </figure>
+        <figure class="frag" data-step="e2">
+          <img src="assets/PFE_PRESENTATIONS_ANNEXES_2.png" alt="Répartition des six vues et recouvrement">
+          <figcaption>Six caméras virtuelles tous les 60° (a), recouvrement de 30° entre vues adjacentes (b) (rapport, fig. 3.6).</figcaption>
+        </figure>
+        <figure class="frag" data-step="e3">
+          <img src="assets/PFE_PRESENTATIONS_ANNEXES_3.png" alt="Panorama déplié en six vues">
+          <figcaption>Secteurs extraits (a) et vues planes produites par projection gnomonique (b) (rapport, fig. 3.7).</figcaption>
+        </figure>
+        <figure class="frag" data-step="e4">
+          <img src="assets/PFE_PRESENTATIONS_ANNEXES_4.png" alt="Vérification sur mire angulaire">
+          <figcaption>Mire tous les 10° (a), vue extraite (b), focale retrouvée par la mesure (c) (rapport, fig. 3.8).</figcaption>
+        </figure>
+        <figure class="frag" data-step="e5">
+          <img src="assets/PFE_PRESENTATIONS_ANNEXES_5.png" alt="Panorama avant et après CLAHE, histogrammes">
+          <figcaption>Panorama brut (a), après égalisation CLAHE (b) et distribution des luminances (c) (rapport, fig. 3.10).</figcaption>
+        </figure>
+        <figure class="frag" data-step="e6">
+          <img src="assets/PFE_PRESENTATIONS_ANNEXES_6.png" alt="Points SIFT avant et après CLAHE">
+          <figcaption>Points SIFT détectés sur la vue brute (a) et sur la vue égalisée (b) (rapport, fig. 3.11).</figcaption>
+        </figure>
+      </div>
+     </div>
+    </div>
+  </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A8 · Annexe · Recalage du nuage de rue
+       partie : annexe   |   type : contenu (caché)   |   ancre : #c36
+       complément de l'étape 4 (Recalage), pour les questions du jury
+       source : rapport §3.2.2 « Redressement du nuage », annexe C
+       format oral : une étape par carte, un schéma, une phrase en clair,
+       la formule en petit, le résultat. Classes préfixées rc- (autonomes).
+       clics : 1) hauteur  2) murs  3) dérives locales  4) contrôle final
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c36" class="slide" data-sec="5" data-hidden="1" data-noside="1" data-foot="Annexe" data-title="Annexe · Recalage du nuage de rue">
+    <style>
+      /* bouton de retour, commun aux annexes */
+      .slide .retour{font:inherit;font-size:13.5px;color:var(--insa-d);background:#fff;border:1px solid var(--insa);padding:7px 14px;cursor:pointer;white-space:nowrap}
+      .slide .retour:hover{background:var(--insa);color:#fff}
+      #c36 .rc{display:flex;flex-direction:column;justify-content:center;gap:18px;height:100%}
+      #c36 .rc-intro{margin:0;max-width:none;font-size:17px;line-height:1.5;color:var(--ink)}
+      #c36 .rc-intro b{color:var(--insa-d)}
+      #c36 .rc-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+      #c36 .rc-carte{border:1px solid var(--rule);border-top:3px solid var(--insa);background:#fff;padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+      #c36 .rc-tete{display:flex;align-items:baseline;gap:10px}
+      #c36 .rc-num{font-family:var(--f-serif);font-size:30px;font-weight:600;color:var(--insa);line-height:1}
+      #c36 .rc-tete h3{margin:0;font-size:18px;line-height:1.25}
+      #c36 .rc-tete small{display:block;font-size:12.5px;font-weight:400;color:var(--muted)}
+      #c36 svg{display:block;width:100%;height:auto;background:#FBFBF9;border:1px solid var(--rule-l, #eee)}
+      #c36 .rc-clair{margin:0;max-width:none;font-size:15px;line-height:1.5;color:var(--ink)}
+      #c36 .rc-fx{font-family:var(--f-serif);font-size:15.5px;color:var(--muted);text-align:center;border-top:1px dashed var(--rule);padding-top:8px;line-height:1.5}
+      #c36 .rc-fx i{font-style:italic}
+      #c36 .rc-fx .rc-fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:13.5px;line-height:1.15;margin:0 2px}
+      #c36 .rc-fx .rc-fr span:first-child{border-bottom:1px solid var(--muted);padding:0 4px 1px}
+      #c36 .rc-leg{margin:6px 0 0;max-width:none;font-size:11.5px;line-height:1.5;color:var(--muted);text-align:left}
+      #c36 .rc-leg i{font-family:var(--f-serif);font-style:italic;color:var(--ink)}
+      #c36 .rc-leg b{font-family:var(--f-serif);font-weight:600;color:var(--ink)}
+      #c36 .rc-res{align-self:flex-start;font-size:13.5px;font-weight:600;color:var(--insa-d);background:var(--insa-t);padding:4px 10px}
+      #c36 .rc-ctrl{margin:0;max-width:none;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;border-left:4px solid var(--insa);background:var(--insa-t);padding:10px 16px;font-size:15px;line-height:1.45;color:var(--ink)}
+      #c36 .rc-ctrl .rc-fx{border:0;padding:0;color:var(--ink);font-size:17px;white-space:nowrap}
+    </style>
+    <div class="ft"><div><h1>Recalage du nuage photogrammétrique de rue</h1><div class="fsub">Annexe A5 — hors déroulé · complément de l'étape 4</div></div>
+      <div class="fright"><button class="retour" type="button">↩ Retour à la présentation</button></div></div>
+    <div class="fr-body">
+     <div class="rc">
+      <p class="rc-intro">Le nuage photogrammétrique <b>dérive</b> le long du parcours. On le recale sur deux références LiDAR fiables : le <b>MNT</b> pour la hauteur, le <b>multipatch</b> pour les murs. Les points sous la voirie (reflets) sont d'abord supprimés.</p>
+
+      <div class="rc-trio">
+        <!-- 1 · hauteur -->
+        <div class="rc-carte frag">
+          <div class="rc-tete"><span class="rc-num">1</span><h3>Calage altimétrique<small>recalage sur le MNT · filtrage MADN</small></h3></div>
+          <svg viewBox="0 0 300 110" aria-hidden="true">
+            <line x1="10" y1="88" x2="290" y2="88" stroke="#8b8f92" stroke-width="2"/>
+            <text x="286" y="103" font-size="11" fill="#8b8f92" text-anchor="end">MNT (LiDAR)</text>
+            <g fill="#3D5A94"><circle cx="40" cy="44" r="3"/><circle cx="70" cy="40" r="3"/><circle cx="100" cy="47" r="3"/><circle cx="130" cy="42" r="3"/><circle cx="160" cy="45" r="3"/><circle cx="190" cy="41" r="3"/><circle cx="220" cy="46" r="3"/><circle cx="250" cy="43" r="3"/></g>
+            <g stroke="#b5b8ba" stroke-width="1.6"><path d="M82 10l8 8M90 10l-8 8"/><path d="M36 96l8 8M44 96l-8 8"/></g>
+            <path d="M150 52 V80" stroke="#3A385C" stroke-width="2" marker-end="url(#rcfl)"/>
+            <text x="158" y="70" font-size="11.5" fill="#3A385C">médiane</text>
+            <defs><marker id="rcfl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#3A385C"/></marker></defs>
+          </svg>
+          <p class="rc-clair">On mesure l'écart de chaque point au sol. Les écarts <b>aberrants</b> (croix) sont écartés, et la <b>médiane</b> des autres donne la translation verticale.</p>
+          <div class="rc-fx">|<i>e<sub>i</sub></i> − méd(<i>e</i>)| &lt; 3 × 1,4826 × MAD<br><span style="font-size:12.5px">1,4826 × MAD ≈ écart-type, insensible aux aberrants</span></div>
+          <p class="rc-leg"><i>e<sub>i</sub></i> écart vertical du point <i>i</i> au MNT · <b>méd(<i>e</i>)</b> médiane de ces écarts · <b>MAD</b> médiane des écarts absolus à la médiane · <b>1,4826</b> facteur de normalisation (loi normale) · <b>3</b> seuil de rejet, soit ≈ 3 écarts-types</p>
+          <span class="rc-res">biais altimétrique −9,28 → 0,94 m</span>
+        </div>
+
+        <!-- 2 · murs -->
+        <div class="rc-carte frag">
+          <div class="rc-tete"><span class="rc-num">2</span><h3>Calage planimétrique<small>ICP point-plan pondéré (Tukey, IRLS)</small></h3></div>
+          <svg viewBox="0 0 300 110" aria-hidden="true">
+            <rect x="126" y="14" width="48" height="82" fill="#3D5A94" opacity=".07"/>
+            <line x1="126" y1="14" x2="126" y2="96" stroke="#3D5A94" stroke-dasharray="3 3" opacity=".5"/>
+            <line x1="174" y1="14" x2="174" y2="96" stroke="#3D5A94" stroke-dasharray="3 3" opacity=".5"/>
+            <line x1="150" y1="8" x2="150" y2="102" stroke="#3a3f44" stroke-width="3"/>
+            <text x="156" y="12" font-size="11" fill="#3a3f44">mur (multipatch)</text>
+            <g fill="#3D5A94"><circle cx="140" cy="28" r="3"/><circle cx="158" cy="40" r="3"/><circle cx="145" cy="55" r="3"/><circle cx="160" cy="68" r="3"/><circle cx="141" cy="82" r="3"/></g>
+            <g fill="#b5b8ba"><circle cx="40" cy="36" r="3"/><circle cx="54" cy="48" r="3"/><circle cx="34" cy="58" r="3"/><circle cx="60" cy="30" r="3"/><circle cx="238" cy="70" r="3"/><circle cx="254" cy="60" r="3"/></g>
+            <text x="47" y="80" font-size="11" fill="#9a9ea1" text-anchor="middle">arbre</text>
+            <text x="246" y="90" font-size="11" fill="#9a9ea1" text-anchor="middle">balcon</text>
+            <text x="150" y="108" font-size="10.5" fill="#3D5A94" text-anchor="middle" opacity=".8">± d<tspan font-size="8" dy="2">max</tspan></text>
+          </svg>
+          <p class="rc-clair">Le nuage est plaqué contre les murs. Un point proche du mur <b>compte pleinement</b>, un point lointain (arbre, balcon) <b>ne compte plus</b>. La bande se resserre à chaque itération.</p>
+          <div class="rc-fx"><i>v<sub>i</sub></i> = <b>n</b>·(<i>P<sub>i</sub></i> − <i>Q</i>) &nbsp;·&nbsp; <i>p<sub>i</sub></i> = max(0, 1 − (<i>v<sub>i</sub></i> / <i>d</i><sub>max</sub>)²)²<br><span style="font-size:12.5px">distance au mur · poids de Tukey, itéré (IRLS)</span></div>
+          <p class="rc-leg"><i>P<sub>i</sub></i> point du nuage · <i>Q</i> point du plan du mur · <b>n</b> normale unitaire du mur · <i>v<sub>i</sub></i> distance signée point-plan · <i>p<sub>i</sub></i> poids du point, entre 0 et 1 · <i>d</i><sub>max</sub> distance au-delà de laquelle le poids s'annule, réduite à chaque itération</p>
+          <span class="rc-res">planimétrie σ 1,15 → 0,53 m</span>
+        </div>
+
+        <!-- 3 · dérives -->
+        <div class="rc-carte frag">
+          <div class="rc-tete"><span class="rc-num">3</span><h3>Correction des dérives locales<small>interpolation gaussienne par maille</small></h3></div>
+          <svg viewBox="0 0 300 110" aria-hidden="true">
+            <g stroke="#d6d8da"><line x1="100" y1="10" x2="100" y2="100"/><line x1="200" y1="10" x2="200" y2="100"/></g>
+            <text x="50" y="104" font-size="10.5" fill="#9a9ea1" text-anchor="middle">maille 1</text>
+            <text x="150" y="104" font-size="10.5" fill="#9a9ea1" text-anchor="middle">maille 2</text>
+            <text x="250" y="104" font-size="10.5" fill="#9a9ea1" text-anchor="middle">maille 3</text>
+            <path d="M10 70 H100 V44 H200 V58 H290" fill="none" stroke="#b5b8ba" stroke-width="1.6" stroke-dasharray="4 3"/>
+            <path d="M10 70 C 60 70, 70 46, 150 44 S 240 58, 290 58" fill="none" stroke="#3D5A94" stroke-width="2.4"/>
+            <g fill="#3A385C"><circle cx="50" cy="70" r="3.5"/><circle cx="150" cy="44" r="3.5"/><circle cx="250" cy="58" r="3.5"/></g>
+            <text x="16" y="20" font-size="11" fill="#9a9ea1">en marches</text>
+            <text x="16" y="34" font-size="11" fill="#3D5A94">lissé</text>
+            <line x1="92" y1="16" x2="112" y2="16" stroke="#b5b8ba" stroke-dasharray="4 3" stroke-width="1.6"/>
+            <line x1="92" y1="30" x2="112" y2="30" stroke="#3D5A94" stroke-width="2.4"/>
+          </svg>
+          <p class="rc-clair">Une correction est estimée <b>par maille</b>. Chaque point reçoit une <b>moyenne des corrections voisines</b>, d'autant plus forte que la maille est proche : pas de marche d'escalier.</p>
+          <div class="rc-fx"><i>W<sub>j</sub></i> = exp(− <span class="rc-fr"><span><i>D<sub>j</sub></i>²</span><span>2<i>σ</i>²</span></span>) &nbsp;·&nbsp; Δ<i>P</i> = <span class="rc-fr"><span>Σ <i>W<sub>j</sub> c<sub>j</sub></i></span><span>Σ <i>W<sub>j</sub></i></span></span><br><span style="font-size:12.5px">poids gaussien selon la distance · σ = rayon de lissage</span></div>
+          <p class="rc-leg"><i>c<sub>j</sub></i> correction estimée au centre de la maille <i>j</i> · <i>D<sub>j</sub></i> distance du point à ce centre · <i>σ</i> rayon de lissage · <i>W<sub>j</sub></i> poids de la maille · Δ<i>P</i> correction appliquée au point</p>
+          <span class="rc-res">68 mailles · correction médiane 1,5 m</span>
+        </div>
+      </div>
+
+      <p class="rc-ctrl frag"><span class="rc-fx"><i>r</i> ≈ <i>t<sub>x</sub></i> sin <i>α</i> + <i>t<sub>y</sub></i> cos <i>α</i> + <i>c</i></span><span><b>Contrôle final</b> — on trace l'écart restant selon l'orientation <i>α</i> de chaque mur. Une <b>sinusoïde</b> révèle un décalage résiduel ; une <b>constante</b> <i>c</i>, les saillies (corniches) absentes du modèle Roofer.<span class="rc-leg" style="display:block"><i>r</i> résidu point-façade après recalage · <i>α</i> azimut de la façade · <i>t<sub>x</sub></i>, <i>t<sub>y</sub></i> composantes du décalage résiduel · <i>c</i> biais constant, identique sur toutes les orientations</span></span></p>
+     </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       CADRE A9 · Annexe · Références citées
+       partie : annexe   |   type : contenu (caché)   |   ancre : #c37
+       toutes les références citées dans la présentation, regroupées par
+       thème dans l'ordre d'apparition, avec le cadre où elles sont citées.
+       source : rapport, « Références citées »
+       les groupes entrent en cascade à l'arrivée sur le cadre ; les
+       références qui ont un lien s'ouvrent dans un nouvel onglet (↗).
+       Classes préfixées bi- (autonomes).
+       ═════════════════════════════════════════════════════════════════════ -->
+  <section id="c37" class="slide" data-sec="5" data-hidden="1" data-noside="1" data-foot="Annexe" data-title="Annexe · Références citées">
+    <style>
+      /* bouton de retour, commun aux annexes */
+      .slide .retour{font:inherit;font-size:13.5px;color:var(--insa-d);background:#fff;border:1px solid var(--insa);padding:7px 14px;cursor:pointer;white-space:nowrap}
+      .slide .retour:hover{background:var(--insa);color:#fff}
+      #c37 .bi{display:grid;grid-template-columns:repeat(3,1fr);gap:0 34px;height:100%;align-items:start}
+      #c37 .bi-col{min-width:0}
+      #c37 .bi-col + .bi-col{border-left:1px solid var(--rule);padding-left:34px;margin-left:-17px;min-height:100%}
+      #c37 .bi-groupe{margin:0 0 24px}
+      #c37 .bi-tete{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:2px solid var(--insa);padding-bottom:4px;margin-bottom:8px}
+      #c37 .bi-tete h3{margin:0;font-size:17px;color:var(--insa-d)}
+      #c37 .bi-cadre{font-size:11.5px;font-weight:600;color:var(--insa-d);background:var(--insa-t);padding:2px 8px;white-space:nowrap}
+      #c37 .bi-groupe ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+      #c37 .bi-groupe li{font-size:13.5px;line-height:1.45;color:var(--muted);padding-left:11px;border-left:2px solid var(--rule)}
+      #c37 .bi-groupe li b{color:var(--ink);font-weight:600}
+      #c37 .bi-groupe li i{color:var(--ink)}
+      #c37 .bi-groupe li a{color:var(--insa);text-decoration:none;font-weight:600;margin-left:3px}
+      #c37 .bi-groupe li a:hover{text-decoration:underline}
+      #c37 .bi-groupe li:hover{border-left-color:var(--insa)}
+      /* entrée en cascade */
+      #c37 .bi-groupe{opacity:0;transform:translateY(14px)}
+      #c37.active .bi-groupe{animation:biEntre .6s cubic-bezier(.2,.8,.2,1) forwards}
+      #c37.active .bi-g2{animation-delay:.12s} #c37.active .bi-g3{animation-delay:.24s}
+      #c37.active .bi-g4{animation-delay:.36s} #c37.active .bi-g5{animation-delay:.48s}
+      @keyframes biEntre{to{opacity:1;transform:none}}
+    </style>
+    <div class="ft"><div><h1>Références citées</h1><div class="fsub">Annexe A6 — hors déroulé · dans l'ordre d'apparition dans la présentation</div></div>
+      <div class="fright"><button class="retour" type="button">↩ Retour à la présentation</button></div></div>
+    <div class="fr-body">
+     <div class="bi">
+
+      <div class="bi-col">
+      <div class="bi-groupe bi-g1">
+        <div class="bi-tete"><h3>Contexte</h3><span class="bi-cadre">cadre 2</span></div>
+        <ol>
+          <li><b>Frémont, A. (2009).</b> <i>La Région, espace vécu.</i> Flammarion, coll. « Champs histoire », n° 805.</li>
+          <li><b>Rodrigues, M., Montañés, C. &amp; Fueyo, N. (2010).</b> <i>A method for the assessment of the visual impact caused by the large-scale deployment of renewable-energy facilities.</i> Environmental Impact Assessment Review, 30(4), 240–246.<a href="https://www.sciencedirect.com/science/article/pii/S0195925509001280" target="_blank" rel="noopener">↗</a></li>
+          <li><b>Tsiaras, E., Tampekis, S. &amp; Gavrilakis, C. (2025).</b> <i>Public perceptions and social acceptance of renewable energy projects in Epirus, Greece: the role of education, demographics and visual exposure.</i> World, 6(3).<a href="https://www.mdpi.com/2673-4060/6/3/111" target="_blank" rel="noopener">↗</a></li>
+        </ol>
+      </div>
+
+      <div class="bi-groupe bi-g2">
+        <div class="bi-tete"><h3>Segmentation du bâti</h3><span class="bi-cadre">cadres 5 · 10</span></div>
+        <ol>
+          <li><b>Zhao, D., Ji, L. &amp; Yang, F. (2023).</b> <i>Land cover classification based on airborne LiDAR point cloud with possibility method and multi-classifier.</i> Sensors, 23(21), 8841.</li>
+          <li><b>Hu, Q., Yang, B., Khalid, S. et al. (2021).</b> <i>Towards semantic segmentation of urban-scale 3D point clouds: a dataset, benchmarks and challenges.</i> arXiv:2009.03137.<a href="https://arxiv.org/abs/2009.03137" target="_blank" rel="noopener">↗</a></li>
+          <li><b>He, K., Gkioxari, G., Dollár, P. &amp; Girshick, R. (2018).</b> <i>Mask R-CNN.</i> arXiv:1703.06870.<a href="https://arxiv.org/abs/1703.06870" target="_blank" rel="noopener">↗</a></li>
+          <li><b>Pham, M.-T., Courtrai, L., Friguet, C., Lefèvre, S. &amp; Baussard, A. (2020).</b> <i>YOLO-Fine: one-stage detector of small objects under various backgrounds in remote sensing images.</i> Remote Sensing, 12(15).<a href="https://www.mdpi.com/2072-4292/12/15/2501" target="_blank" rel="noopener">↗</a></li>
+          <li><b>Jocher, G. &amp; Qiu, J. (2024).</b> <i>Ultralytics YOLO11.</i> Documentation en ligne, version 8.3.0, licence AGPL-3.0.<a href="https://docs.ultralytics.com/models/yolo11/" target="_blank" rel="noopener">↗</a></li>
+        </ol>
+      </div>
+      </div>
+
+      <div class="bi-col">
+      <div class="bi-groupe bi-g3">
+        <div class="bi-tete"><h3>Texturage</h3><span class="bi-cadre">cadre 6</span></div>
+        <ol>
+          <li><b>Barazzetti, L., Brumana, R., Oreni, D., Previtali, M. &amp; Roncoroni, F. (2014).</b> <i>True-orthophoto generation from UAV images: implementation of a combined photogrammetric and computer vision approach.</i> ISPRS Annals, II-5, 57–63.</li>
+          <li><b>Xiao, J., Fang, T., Zhao, P., Lhuillier, M. &amp; Quan, L. (2009).</b> <i>Image-based street-side city modeling.</i> ACM Transactions on Graphics, 28(5), 1–12.<a href="https://doi.org/10.1145/1618452.1618460" target="_blank" rel="noopener">↗</a></li>
+          <li><b>Zhang, M., Wu, J., Liu, Y., Zhang, J. &amp; Li, G. (2022).</b> <i>GIS based procedural modeling in 3D urban design.</i> ISPRS Int. Journal of Geo-Information, 11(10).<a href="https://www.mdpi.com/2220-9964/11/10/531" target="_blank" rel="noopener">↗</a></li>
+          <li><b>Chen, X., Chu, F.-J., Gleize, P. et al. (2026).</b> <i>SAM 3D: 3Dfy anything in images.</i> Proceedings of CVPR, 7220–7232.</li>
+          <li><b>Murtiyoso, A. &amp; Grussenmeyer, P. (2023).</b> <i>Initial assessment on the use of state-of-the-art NeRF neural network 3D reconstruction for heritage documentation.</i> ISPRS Archives, XLVIII-M-2-2023, 1113–1118.<a href="https://isprs-archives.copernicus.org/articles/XLVIII-M-2-2023/1113/2023/" target="_blank" rel="noopener">↗</a></li>
+        </ol>
+      </div>
+      </div>
+
+      <div class="bi-col">
+      <div class="bi-groupe bi-g4">
+        <div class="bi-tete"><h3>Rendu temps réel</h3><span class="bi-cadre">cadres 7 · 29</span></div>
+        <ol>
+          <li><b>Janovský, M. (2024).</b> <i>Pre-dam Vltava River valley — a case study of 3D visualization of large-scale GIS datasets in Unreal Engine.</i> ISPRS Int. Journal of Geo-Information, 13(10).<a href="https://www.mdpi.com/2220-9964/13/10/344" target="_blank" rel="noopener">↗</a></li>
+          <li><b>Dickson, P. E., Block, J. E., Echevarria, G. N. &amp; Keenan, K. C. (2017).</b> <i>An experience-based comparison of Unity and Unreal for a stand-alone 3D game development course.</i> ACM ITiCSE 2017.</li>
+          <li><b>Abhishek, S., Varghese, A., Thomas, A., Joseph, C. S. &amp; Varghese, T. (2023).</b> <i>Comparative analysis on Unreal Engine 5 vs Unity.</i> Int. Journal of Engineering Technology and Management Sciences.</li>
+          <li><b>Soni, L. &amp; Kaur, A. (2024).</b> <i>Merits and demerits of Unreal and Unity: a comprehensive comparison.</i> ICCIGST 2024, 1–5.</li>
+          <li><b>Wang, J. (2025).</b> <i>GIS-based parametric modeling for architecture and urban digital twins assets: a case study of the Dora Park area in Turin, Italy.</i> Mémoire de master, Politecnico di Torino.</li>
+          <li><b>Ene, A., Badea, A. C., Badea, G. &amp; Grădinaru, A.-P. (2026).</b> <i>Development of urban digital twins using GIS and game engine systems.</i> Land, 15(2).<a href="https://www.mdpi.com/2073-445X/15/2/254" target="_blank" rel="noopener">↗</a></li>
+        </ol>
+      </div>
+
+      <div class="bi-groupe bi-g5">
+        <div class="bi-tete"><h3>Travaux antérieurs</h3><span class="bi-cadre">cadre 18</span></div>
+        <ol>
+          <li><b>Maroni, F. (2025).</b> <i>Optimisation des chaînes de traitement LiDAR pour la modélisation urbaine.</i> Rapport de PFE, OTE Ingénierie, Illkirch.</li>
+        </ol>
+      </div>
+      </div>
+
+     </div>
+    </div>
+  </section>
+
+  
+<!-- ---------- surcouches : plan (S), aide (?), indice de départ ---------- -->
+<div id="menu" role="dialog" aria-label="Plan">
+  <h2>Plan de la présentation</h2>
+  <p class="mhint">Échap pour fermer</p>
+  <div class="mgrid" id="mgrid"></div>
+</div>
+
+<div id="help" role="dialog" aria-label="Raccourcis">
+  <h3>Raccourcis</h3>
+  <dl>
+    <dt><kbd>&rarr;</kbd><kbd>&#9251;</kbd></dt><dd>avancer</dd>
+    <dt><kbd>&larr;</kbd></dt><dd>reculer</dd>
+    <dt><kbd>molette</kbd></dt><dd>défiler</dd>
+    <dt><kbd>S</kbd></dt><dd>plan</dd>
+    <dt><kbd>F</kbd></dt><dd>plein écran</dd>
+    <dt><kbd>T</kbd></dt><dd>chronomètre</dd>
+    <dt><kbd>N</kbd></dt><dd>révéler le cadre</dd>
+    <dt><kbd>0</kbd>&hellip;<kbd>5</kbd></dt><dd>aller à une partie</dd>
+  </dl>
+</div>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<script>
+document.addEventListener('deck:enter', function (e) {
+  var f = e.detail.slide.dataset.foot;
+  if (f) document.getElementById('footsec').textContent = f;
+  // data-noside="1" sur un cadre : masque la barre latérale de la chaîne
+  if (e.detail.slide.dataset.noside) document.getElementById('stage').classList.remove('side-on');
+});
+</script>
+
+<!-- =======================================================================
+     Ordre de chargement volontaire : media.js et cover.js s'abonnent aux
+     événements « deck:enter » / « deck:leave » ; deck.js les émet dès son
+     initialisation, il doit donc être chargé en dernier.
+     ======================================================================= -->
+<script src="js/media.js"></script>
+<script src="js/cover.js"></script>
+<script src="js/deck.js"></script>
+<script>
+/* Plan (touche S) : regroupement par rubrique plutôt que par data-sec.
+   Introduction · État de l'art · Chaîne de traitement · 1 à 4 · Bilan et perspectives
+   (reconstruit après deck.js, mêmes classes .mgroup / .mitem : navigation inchangée) */
+(function () {
+  var grille = document.getElementById('mgrid');
+  if (!grille) return;
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var PARTIES = { '1': '1 — Segmentation du bâti', '2': '2 — Reconstruction 3D',
+                  '3': '3 — Texturage hybride',   '4': '4 — Rendu temps réel',
+                  '5': 'Bilan et perspectives' };
+  function rubrique(s) {
+    var sec = s.dataset.sec || '0', t = s.dataset.title || '';
+    if (s.dataset.hidden === '1') return 'Annexes · hors déroulé';
+    if (sec !== '0') return PARTIES[sec] || '';
+    return s.dataset.foot || 'Ouverture';
+  }
+  var ordre = [], groupes = {}, nV = 0, nA = 0;
+  slides.forEach(function (s, i) {
+    var r = rubrique(s);
+    if (!groupes[r]) { groupes[r] = []; ordre.push(r); }
+    groupes[r].push({ i: i, t: s.dataset.title || ('Cadre ' + (i + 1)),
+                      n: s.dataset.hidden === '1' ? 'A' + (++nA) : String(++nV).padStart(2, '0') });
+  });
+  grille.innerHTML = '';
+  ordre.forEach(function (r) {
+    var g = document.createElement('div'); g.className = 'mgroup';
+    var h = document.createElement('h3'); h.textContent = r; g.appendChild(h);
+    groupes[r].forEach(function (o) {
+      var d = document.createElement('div'); d.className = 'mitem'; d.dataset.i = o.i;
+      var em = document.createElement('em'); em.textContent = o.n;
+      var sp = document.createElement('span'); sp.textContent = o.t;
+      d.appendChild(em); d.appendChild(sp); g.appendChild(d);
+    });
+    grille.appendChild(g);
+  });
+})();
+</script>
+<script>
+/* Cadres cachés (data-hidden="1") : hors du déroulé, accessibles par le plan.
+   deck.js n'est pas modifié : ce script filtre les commandes « avancer »
+   en phase de capture, avant qu'elles n'atteignent deck.js. */
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  function cache(s) { return s.dataset.hidden === '1'; }
+  var dernier = -1, nVisibles = 0, rangAnnexe = {};
+  slides.forEach(function (s, i) {
+    if (cache(s)) rangAnnexe[i] = Object.keys(rangAnnexe).length + 1;
+    else { dernier = i; nVisibles++; }
+  });
+  if (!Object.keys(rangAnnexe).length) return;
+
+  var menu = document.getElementById('menu');
+  function planOuvert() { return menu.classList.contains('open'); }
+  function active() { return document.querySelector('.slide.active'); }
+  function auBout() {
+    var s = active();
+    return s && slides.indexOf(s) === dernier && !s.querySelector('.frag:not(.on)');
+  }
+  function bloque(e) { e.stopImmediatePropagation(); if (e.cancelable) e.preventDefault(); }
+
+  /* aller à un cadre en passant par le plan (seule entrée publique de deck.js) */
+  function aller(i, toutReveler) {
+    if (!planOuvert()) document.dispatchEvent(new KeyboardEvent('keydown', { key: 's', bubbles: true }));
+    var m = document.querySelector('.mitem[data-i="' + i + '"]');
+    if (m) m.click();
+    if (toutReveler) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', bubbles: true }));
+  }
+
+  // pied de page : total sans les annexes, numéro « A1 » sur une annexe
+  document.getElementById('ftot').textContent = nVisibles;
+  var retour = 0;
+  document.addEventListener('deck:enter', function (e) {
+    var i = e.detail.index;
+    if (rangAnnexe[i]) document.getElementById('fcur').textContent = 'A' + rangAnnexe[i];
+    else retour = i;
+  });
+
+  // bouton « Retour » des annexes : dernier cadre du déroulé consulté
+  Array.prototype.forEach.call(document.querySelectorAll('.slide[data-hidden="1"] .retour'), function (b) {
+    b.addEventListener('click', function () { aller(retour, true); });
+  });
+
+  // « avancer » depuis le dernier cadre visible : bloqué ; Fin : dernier cadre visible
+  window.addEventListener('keydown', function (e) {
+    if (planOuvert()) return;
+    var k = e.key;
+    if (k === 'End') { bloque(e); aller(dernier, true); return; }
+    if (auBout() && ['ArrowRight', ' ', 'PageDown', 'Enter', 'ArrowDown'].indexOf(k) >= 0) bloque(e);
+  }, true);
+  window.addEventListener('click', function (e) {
+    if (planOuvert()) return;
+    if (auBout() && !e.target.closest('a, button, input, iframe, [data-jump], #menu, #help')) bloque(e);
+  }, true);
+  window.addEventListener('wheel', function (e) {
+    if (!planOuvert() && auBout() && e.deltaY > 0) e.stopImmediatePropagation();
+  }, { capture: true, passive: true });
+})();
+</script>
+</body>
+</html>

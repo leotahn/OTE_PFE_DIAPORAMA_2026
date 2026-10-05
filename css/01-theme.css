@@ -1,0 +1,96 @@
+/* =====================================================================
+   01-theme.css — palette, typographie, réglages globaux
+   ---------------------------------------------------------------------
+   Tout ce qui se règle ici se propage au reste de la présentation.
+   Pour changer la couleur de structure, ne toucher que --insa,
+   --insa-d (foncé, en-têtes d'alerte) et --insa-t (teinte des blocs).
+   ===================================================================== */
+:root{
+  --insa:#3D5A94;
+  --insa-d:#3A385C;
+  --insa-dd:#2B2A47;
+  --insa-t:#EEF3F9;      /* teinte très claire */
+  --insa-t2:#DDE7F2;
+  --ciel:#7EA3C8;
+  --slate:#3F4C54;
+  --slate-t:#F1F4F5;
+
+  --bg:#FFFFFF;
+  --ink:#1B1B1B;
+  --muted:#5B6166;
+  --dim:#83898D;
+  --rule:#D9D9D4;
+  --rule-l:#EAEAE6;
+
+  --f-serif:'Source Serif 4', Georgia, serif;
+  --f-sans:'Source Sans 3', system-ui, sans-serif;
+
+  --ease:cubic-bezier(.62,.03,.14,1);
+  --dur:540ms;
+  --sw:0px;              /* largeur de la barre latérale */
+  --fh:28px;             /* hauteur de la barre de pied */
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:#5A5F63;color:var(--ink);font-family:var(--f-sans);
+  overflow:hidden;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+
+#viewport{position:fixed;inset:0;display:grid;place-items:center;background:#53585C}
+#stage{
+  /* centré par son milieu : reste au centre de l'écran quelle que soit
+     sa taille (MacBook, portable…), la mise à l'échelle part de là */
+  position:absolute;left:50%;top:50%;margin:-450px 0 0 -800px;
+  width:1600px;height:900px;flex:none;transform-origin:center center;
+  background:var(--bg);overflow:hidden;box-shadow:0 22px 70px rgba(0,0,0,.42);
+}
+#stage.side-on{--sw:212px}
+
+
+/* ---------- typographie ---------- */
+p{font-size:18px;line-height:1.55;color:var(--ink);max-width:70ch}
+p.lead{font-family:var(--f-serif);font-size:23px;line-height:1.46;color:var(--insa-d)}
+.small{font-size:14.5px;line-height:1.5;color:var(--muted)}
+b,strong{font-weight:600}
+em{font-style:italic}
+h2{font-family:var(--f-serif);font-size:24px;font-weight:600}
+h3{font-family:var(--f-sans);font-size:16.5px;font-weight:600}
+.serif{font-family:var(--f-serif)}
+.struct{color:var(--insa-d)}
+
+ul.it{list-style:none;display:flex;flex-direction:column;gap:11px}
+ul.it li{position:relative;padding-left:20px;font-size:17.5px;line-height:1.48;max-width:66ch}
+ul.it li::before{content:'\25B8';position:absolute;left:0;top:-1px;color:var(--insa);font-size:15px}
+ul.it li.small{font-size:14.5px;color:var(--muted)}
+ul.it li.small::before{color:var(--insa-d);font-size:12px;top:0}
+
+.frag{opacity:0;transform:translateY(6px);transition:opacity 400ms var(--ease), transform 400ms var(--ease)}
+.frag.on{opacity:1;transform:none}
+
+/* ---------- thème OTE : pages de partie sur fond marine ---------- */
+.slide[data-kind="chapter"]{background:var(--insa-d)}
+.slide[data-kind="chapter"] .chap .cpart{color:var(--ciel)}
+.slide[data-kind="chapter"] .chap h1{color:#fff}
+.slide[data-kind="chapter"] .chap .crule{background:var(--ciel)}
+.slide[data-kind="chapter"] .chap .cm div{color:#C9D3E3}
+.slide[data-kind="chapter"] .chap .cm b{color:#fff}
+#foot .f1{background:var(--insa-dd)}
+#foot .f3{background:var(--ciel);color:#fff}
+
+/* ---------- thème OTE : pages de partie — sigle en filigrane + titre dans un cercle ---------- */
+.slide[data-kind="chapter"]{overflow:hidden}
+.slide[data-kind="chapter"]::before{content:'';position:absolute;z-index:0;
+  left:50px;top:50px;bottom:-60px;width:640px;opacity:.28;pointer-events:none;
+  background:url("../assets/sigle-ote.png") left top/auto 100% no-repeat}
+.slide[data-kind="chapter"] .chap{position:relative;z-index:1;align-items:center;text-align:center;padding:0 60px}
+.slide[data-kind="chapter"] .chap::before{content:'';position:absolute;left:50%;top:50%;
+  width:580px;height:580px;transform:translate(-50%,-50%);
+  border:1.5px solid #fff;border-radius:50%;pointer-events:none}
+.slide[data-kind="chapter"] .chap .cpart{letter-spacing:.22em;margin-bottom:22px}
+.slide[data-kind="chapter"] .chap h1{font-size:38px;max-width:440px}
+.slide[data-kind="chapter"] .chap .crule{display:none}
+.slide[data-kind="chapter"] .chap .cd{font-size:15px;max-width:400px;margin-top:18px;color:#C9D3E3}
+.slide[data-kind="chapter"] .chap .cm{justify-content:center;gap:40px;margin-top:22px}
