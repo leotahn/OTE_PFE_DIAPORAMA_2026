@@ -107,6 +107,12 @@
        partie : introduction   |   type : cover   |   ancre : #c01
        ═════════════════════════════════════════════════════════════════════ -->
   <section id="c01" class="slide bleed" data-sec="0" data-title="Page de titre" data-kind="cover">
+    <style>
+      #c01 .role{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+        color:var(--insa);margin-bottom:8px}
+      #c01 .auteur{margin-bottom:20px;font-size:13px;color:var(--muted);line-height:1.45}
+      #c01 .auteur b{display:block;font-family:var(--f-serif);font-size:15.5px;font-weight:600;color:var(--ink)}
+    </style>
     <div class="tp">
       <div class="logos">
         <div class="lgroup">
@@ -121,24 +127,29 @@
             <img style="max-height:42px" src="assets/LOGO_TPS.png" alt="Télécom Physique Strasbourg"></span>
         </div>
       </div>
-  
+
       <div class="tmain">
         <div class="tcol">
           <div class="ttype">SIG 2026 · Conférence francophone Esri</div>
           <h1>Développement de méthodes de création et d'édition de maquettes numériques 3D photoréalistes géoréférencées à partir de nuages de points LiDAR</h1>
           <p class="tsub">Chaîne automatisée fondée sur des données ouvertes, du nuage de points brut à l'environnement de rendu temps réel.</p>
           <div class="tsep"></div>
+
+          <div class="role">Travaux réalisés par</div>
+          <div class="auteur"><b>Léo Kirchhoff</b>Projet de fin d'études · INSA Strasbourg · Télécom Physique Strasbourg</div>
+
+          <div class="role">Présenté par</div>
           <div class="tpeople">
-            <div><b>Stéphane Moisy</b>Expert Cartographie et Administration S.I.G. · Chef de pôle</div>
+            <div><b>Stéphane Moisy</b>Expert Géomaticien · Chef de pôle</div>
             <div><b>Baptiste Mischler</b>Ingénieur Géomètre Topographe et Géomaticien</div>
           </div>
-</div>
-  
+        </div>
+
         <!-- animation : nuage LiDAR -> plans de toiture -> LoD2, en boucle.
              Réglages dans js/cover.js (durées, densité, couleurs, rotation). -->
         <div class="tviz"><canvas id="recon"></canvas></div>
       </div>
-  
+
       <div class="tfoot">
         <span>SIG 2026, le Géo événement — Esri France</span>
         <span>Docks de Paris, 7 et 8 octobre 2026</span>
@@ -171,10 +182,10 @@
         <div class="pers">
           <div class="ph"><span>SM</span><img src="assets/SM.jpg" alt="Stéphane Moisy" onerror="this.remove()"></div>
           <h2>Stéphane Moisy</h2>
-          <p>Expert Cartographie et Administration S.I.G<b>Chef de pôle</b></p>
+          <p>Expert Géomaticien<b>Chef de pôle</b></p>
         </div>
         <div class="pers">
-          <div class="ph"><span>BM</span><img src="assets/BM.jpg" alt="Baptiste Mischler" onerror="this.remove()"></div>
+          <div class="ph"><span>BM</span><img src="assets/BM.png" alt="Baptiste Mischler" onerror="this.remove()"></div>
           <h2>Baptiste Mischler</h2>
           <p>Géomètre Topographe et Géomaticien<b>Ingénieur</b></p>
         </div>
@@ -1648,6 +1659,12 @@
        le canevas #recon est déplacé ici à l'arrivée, puis rendu au cadre 01.
        ═════════════════════════════════════════════════════════════════════ -->
   <section id="c31" class="slide bleed" data-sec="5" data-title="Merci" data-noside="1" data-foot="Bilan et perspectives" data-kind="cover">
+    <style>
+      #c31 .role{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+        color:var(--insa);margin-bottom:8px}
+      #c31 .auteur{margin-bottom:20px;font-size:13px;color:var(--muted);line-height:1.45}
+      #c31 .auteur b{display:block;font-family:var(--f-serif);font-size:15.5px;font-weight:600;color:var(--ink)}
+    </style>
     <div class="tp">
       <div class="logos">
         <div class="lgroup">
@@ -1669,8 +1686,13 @@
           <h1 style="font-size:52px;line-height:1.15">Merci de votre attention</h1>
           <p class="tsub">Nous restons à votre disposition pour les questions.</p>
           <div class="tsep"></div>
+
+          <div class="role">Travaux réalisés par</div>
+          <div class="auteur"><b>Léo Kirchhoff</b>Projet de fin d'études · INSA Strasbourg · Télécom Physique Strasbourg</div>
+
+          <div class="role">Présenté par</div>
           <div class="tpeople">
-            <div><b>Stéphane Moisy</b>Expert Cartographie et Administration S.I.G. · Chef de pôle</div>
+            <div><b>Stéphane Moisy</b>Expert Géomaticien · Chef de pôle</div>
             <div><b>Baptiste Mischler</b>Ingénieur Géomètre Topographe et Géomaticien</div>
           </div>
         </div>
